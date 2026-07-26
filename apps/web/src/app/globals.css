@@ -1,1 +1,117 @@
 @import "tailwindcss";
+
+@theme {
+  --color-bg: var(--tl-bg);
+  --color-bg-raised: var(--tl-bg-raised);
+  --color-bg-sunken: var(--tl-bg-sunken);
+  --color-ink: var(--tl-ink);
+  --color-ink-muted: var(--tl-ink-muted);
+  --color-primary: var(--tl-primary);
+  --color-primary-ink: var(--tl-primary-ink);
+  --color-accent: var(--tl-accent);
+  --color-accent-ink: var(--tl-accent-ink);
+  --color-confirm: var(--tl-confirm);
+  --color-confirm-bg: var(--tl-confirm-bg);
+  --color-line: var(--tl-line);
+  --color-focus: var(--tl-focus);
+
+  --font-display: var(--tl-font-display-family), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--tl-font-body-family), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--tl-font-mono-family), ui-monospace, "SFMono-Regular", monospace;
+}
+
+/*
+ * Tokens are defined as an indirection (--tl-*) rather than set directly on the
+ * @theme block, so light/dark overrides below only ever redefine what a Tailwind
+ * utility points at, never fight Tailwind's own cascade layer.
+ */
+:root {
+  --tl-bg: #ffffff;
+  --tl-bg-raised: #f4f5fb;
+  --tl-bg-sunken: #eceefa;
+  --tl-ink: #14161f;
+  --tl-ink-muted: #666b80;
+  --tl-primary: #3552ff;
+  --tl-primary-ink: #ffffff;
+  --tl-accent: #ff6b45;
+  --tl-accent-ink: #1a0800;
+  --tl-confirm: #00b294;
+  --tl-confirm-bg: #e2f8f3;
+  --tl-line: #e2e4f0;
+  --tl-focus: #14161f;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tl-bg: #0e1020;
+    --tl-bg-raised: #171a2e;
+    --tl-bg-sunken: #121427;
+    --tl-ink: #f2f3f8;
+    --tl-ink-muted: #9a9fb5;
+    --tl-primary: #6f89ff;
+    --tl-primary-ink: #0b0e22;
+    --tl-accent: #ff8c69;
+    --tl-accent-ink: #2a0e02;
+    --tl-confirm: #2fe0c0;
+    --tl-confirm-bg: #0f2a26;
+    --tl-line: #2a2d47;
+    --tl-focus: #f2f3f8;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --tl-bg: #0e1020;
+  --tl-bg-raised: #171a2e;
+  --tl-bg-sunken: #121427;
+  --tl-ink: #f2f3f8;
+  --tl-ink-muted: #9a9fb5;
+  --tl-primary: #6f89ff;
+  --tl-primary-ink: #0b0e22;
+  --tl-accent: #ff8c69;
+  --tl-accent-ink: #2a0e02;
+  --tl-confirm: #2fe0c0;
+  --tl-confirm-bg: #0f2a26;
+  --tl-line: #2a2d47;
+  --tl-focus: #f2f3f8;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  --tl-bg: #ffffff;
+  --tl-bg-raised: #f4f5fb;
+  --tl-bg-sunken: #eceefa;
+  --tl-ink: #14161f;
+  --tl-ink-muted: #666b80;
+  --tl-primary: #3552ff;
+  --tl-primary-ink: #ffffff;
+  --tl-accent: #ff6b45;
+  --tl-accent-ink: #1a0800;
+  --tl-confirm: #00b294;
+  --tl-confirm-bg: #e2f8f3;
+  --tl-line: #e2e4f0;
+  --tl-focus: #14161f;
+  color-scheme: light;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+@keyframes flap-cycle {
+  0%, 40% { transform: translateY(0); opacity: 1; }
+  48% { transform: translateY(-3px); opacity: 0.3; }
+  52% { transform: translateY(3px); opacity: 0.3; }
+  60%, 100% { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -95,4 +95,15 @@ Loading states that don't shift layout.
   that payload fetched server-side from Railway. See `docs/DEPLOYMENT.md` for the
   click-path and `docs/DECISIONS.md` for open follow-ups (CORS origin should move
   to Vercel's stable alias once picked; no custom domain yet).
+- **Phase 1 (design tokens + marketing shell): built, not yet deployed.**
+  Bright-palette "Route & Rush" design system as Tailwind v4 tokens (light/dark),
+  UI primitives (Button/Input/Select/Textarea/Card/Badge/Table/Tabs/Dialog/
+  Toast/Breadcrumb/Pagination — Tabs/Dialog/Toast on Radix Primitives, rest
+  hand-rolled), site header/footer with an accessible mobile nav, and three real
+  pages (home/about/contact). Contact form is a real Zod-validated Fastify route
+  writing to Postgres (`ContactSubmission`), not a stub. SEO/OG scaffolding
+  (`robots.ts`, `sitemap.ts`, `opengraph-image.tsx`, `<JsonLd>`, title template)
+  and a Lighthouse CI performance budget are wired into CI. See
+  `docs/DECISIONS.md` for the placeholder-service-tiles caveat and the
+  Turborepo env-passthrough bug this phase caught and fixed.
 - Phase 1 onward: not started. Stop-and-review gate per the rule above.

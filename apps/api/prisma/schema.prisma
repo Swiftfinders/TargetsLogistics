@@ -16,3 +16,18 @@ model User {
 
   @@map("user")
 }
+
+// Public marketing contact form submissions. No auth/account scope — this is an
+// anonymous lead form, unlike every other mutation in this schema.
+model ContactSubmission {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([createdAt])
+  @@map("contact_submission")
+}

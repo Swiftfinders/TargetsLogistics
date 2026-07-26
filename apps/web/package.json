@@ -9,9 +9,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "echo \"no unit tests yet\"",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "lhci": "lhci autorun"
   },
   "dependencies": {
+    "@radix-ui/react-dialog": "^1.1.4",
+    "@radix-ui/react-tabs": "^1.1.2",
+    "@radix-ui/react-toast": "^1.2.4",
     "@targets/shared": "workspace:*",
     "next": "^15.1.4",
     "react": "^19.0.0",
@@ -20,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
+    "@lhci/cli": "^0.14.0",
     "@playwright/test": "^1.49.1",
     "@targets/config": "workspace:*",
     "@tailwindcss/postcss": "^4.0.0",

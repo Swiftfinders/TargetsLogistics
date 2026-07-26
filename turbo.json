@@ -5,12 +5,14 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "prisma/**", "public/**", "*.config.*", "package.json", "tsconfig.json"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": ["DATABASE_URL", "API_URL", "NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_SITE_URL", "APP_VERSION"]
     },
     "dev": {
       "dependsOn": ["^build"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": ["DATABASE_URL", "CORS_ORIGINS", "API_URL", "NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_SITE_URL", "PORT", "APP_VERSION"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -24,11 +26,18 @@
     "test": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "test/**", "*.config.*"],
-      "outputs": []
+      "outputs": [],
+      "env": ["DATABASE_URL", "CORS_ORIGINS", "APP_VERSION"]
     },
     "test:e2e": {
       "dependsOn": ["build"],
-      "outputs": ["playwright-report/**"]
+      "outputs": ["playwright-report/**"],
+      "env": ["NEXT_PUBLIC_API_URL", "PLAYWRIGHT_BASE_URL"]
+    },
+    "lhci": {
+      "dependsOn": ["build"],
+      "outputs": [".lighthouseci/**"],
+      "env": ["NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_SITE_URL", "PORT"]
     }
   }
 }

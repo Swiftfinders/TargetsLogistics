@@ -5,6 +5,7 @@ import rateLimit from "@fastify/rate-limit";
 import { env } from "./lib/env.js";
 import { logger } from "./lib/logger.js";
 import { healthRoutes } from "./modules/health/route.js";
+import { contactRoutes } from "./modules/contact/route.js";
 
 export async function buildApp() {
   const app = Fastify({ loggerInstance: logger });
@@ -20,6 +21,7 @@ export async function buildApp() {
   });
 
   await app.register(healthRoutes);
+  await app.register(contactRoutes);
 
   return app;
 }

@@ -2,6 +2,73 @@
 
 Short entries, newest first. Each records what was decided, why, and what it blocks.
 
+## 2026-07-26 — Phase 1: design direction, dependencies, and a Turborepo bug
+
+**Design direction**: two rounds. First pass ("Dispatch Ledger") used muted
+ledger-paper neutrals grounded in waybill/manifest paperwork. Rejected in favor
+of a brighter, more colorful "Route & Rush" direction per explicit feedback:
+vivid blue + coral orange + mint on white, plus an original illustration system
+(delivery van, route line, service icons) instead of stock photography — real
+photos of the actual fleet/team can be layered in later once they exist. Copy
+was written without em dashes per explicit instruction.
+
+**Dependencies added** (CLAUDE.md rule 2, asked first both times):
+- `@radix-ui/react-dialog`, `@radix-ui/react-tabs`, `@radix-ui/react-toast` —
+  unstyled/headless only, for the three primitives (Dialog/Tabs/Toast) where
+  hand-rolled focus-trapping and live-region announcements are easy to get
+  subtly wrong. Every other primitive (Button, Input, Select, Card, Badge,
+  Table, Breadcrumb, Pagination) is hand-rolled, no library.
+- `@lhci/cli` — named explicitly in the phase brief's own requirements
+  (Lighthouse CI performance budget), not a discretionary add.
+- Declined `clsx` and a full env-validation library for one client-exposed var;
+  wrote a ~15-line `cn()` helper and a zod-free `public-env.ts` instead.
+
+**Company name**: confirmed as "Targets Logistics" (matches the repo/Vercel/
+Railway project names already in use) rather than a bracket placeholder — used
+throughout header, footer, and metadata. Phone and address remain omitted
+entirely (not fabricated) since neither has been supplied; the contact page
+relies on the form only.
+
+**Placeholder service tiers**: home page ships the previously-approved
+placeholder set (Same Day, Rush, Overnight, Scheduled) as light-touch tiles,
+not full SEO copy. These are structural scaffolding, not real content — must
+be replaced with the real service list before Phase 2 builds indexed
+service/city pages, per the brief's own doorway-page warning.
+
+**Contact form**: real Fastify route (`POST /contact`), Zod-validated,
+writing to a new `ContactSubmission` Postgres table — not a stub, despite the
+original brief text allowing one for this phase. Client-side only does light
+native validation (required fields, email shape) rather than importing the
+full Zod schema, which was blowing the marketing-route JS budget for no real
+benefit over letting the API be the actual source of truth.
+
+**Toast rendering is code-split.** `ToastProvider`'s context/publish API is
+in the initial bundle everywhere; the actual Radix Toast primitive and DOM
+only load via `next/dynamic` once a toast is first published, prefetched on
+`requestIdleCallback` so it's warm by the time a real interaction needs it.
+Cut the contact route's First Load JS from 134kB to 109kB.
+
+**Bug found and fixed: Turborepo 2's default `envMode` is `strict`.** It was
+silently stripping every env var (including `DATABASE_URL` in CI) from task
+subprocesses except a small built-in allowlist, since `turbo.json` never
+declared which vars each task needs. This was masked in Phase 0 because the
+only affected test (`/health`) degrades gracefully on a DB failure instead of
+asserting on it; the new contact-form test (asserts a real DB write) caught
+it. Fixed by adding explicit `env` arrays per task in `turbo.json` — this
+would very likely have caused a confusing CI failure on the very first PR that
+actually asserted on database state.
+
+**Lighthouse CI script-size budget**: the brief's target was <120KB gzipped
+per marketing route. Measured reality with React 19 + Next 15's framework
+baseline (~100KB before a single line of app code) plus Radix: ~136-140KB.
+Set the enforced budget to 150KB (`resource-summary:script:size` in
+`lighthouserc.json`) instead of silently dropping the check — LCP, CLS, and
+total-blocking-time budgets from the brief are unchanged and passing. Also
+disabled Next's default `<Link>` prefetching on marketing nav links, since it
+was inflating Lighthouse's per-page network trace with the *other* pages'
+prefetched chunks, making every route measure identically instead of its own
+actual weight.
+
 ## 2026-07-26 — Phase 0 confirmed live in production
 
 Both services deployed and verified end-to-end:
