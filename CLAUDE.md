@@ -117,18 +117,24 @@ Loading states that don't shift layout.
   Deferred (would require fabricating content): industries pages, team,
   careers, resources/blog, legal pages (privacy/terms need real company/
   jurisdiction details), integrations.
-- **Phase 3 (staff login + client portal API): backend built, UI next.**
-  Deliberately re-scoped down from the original brief (see
+- **Phase 3 (staff login + client portal): done, backend and UI, not yet
+  deployed.** Deliberately re-scoped down from the original brief (see
   `docs/DECISIONS.md`) — no order/waybill/tracking/rate-card/invoicing model
   yet, just: `Account`/`User`/`Session`/`PasswordResetToken`/
   `ShipmentRequest`/`AuditLog`. Separate staff/client cookie-based sessions
-  (`tl_staff_session` / `tl_client_session`), argon2id, account lockout after
-  5 failed attempts, password reset + staff-invites-client-user flow (both via
-  Resend, same single-use-30-min-token mechanism). RBAC via
+  (`tl_staff_session` / `tl_client_session`, structurally can't authenticate
+  against each other's routes), argon2id, account lockout after 5 failed
+  attempts, password reset + staff-invites-client-user flow (both via Resend,
+  same single-use-30-min-token mechanism). RBAC via
   `packages/shared/permissions.ts`. Cross-account isolation returns 404 never
-  403 (tested). `docs/API.md` has the full route reference. No MFA (explicitly
-  deferred, see `docs/DECISIONS.md`) and **auth cookies won't actually work in
-  production until `COOKIE_DOMAIN` is set**, which needs a real custom domain
-  attached to both Vercel and Railway first — still don't have one.
-- Phase 4+ (portal/staff console UI, order tracking, everything else in the
+  403 (tested). `docs/API.md` has the full route reference.
+  `/portal/login` + `/portal` (request list + new-request form) and
+  `/staff/login` + `/staff` (all-accounts list + status update) are real,
+  working pages — verified end-to-end with a live Playwright walkthrough
+  (login, submit, cross-role cookie rejection, sign out), not just built and
+  assumed. No MFA (explicitly deferred, see `docs/DECISIONS.md`) and **auth
+  cookies won't actually work in production until `COOKIE_DOMAIN` is set**,
+  which needs a real custom domain attached to both Vercel and Railway first —
+  still don't have one.
+- Phase 4+ (order tracking, rate cards, invoicing, everything else in the
   original brief): not started.
