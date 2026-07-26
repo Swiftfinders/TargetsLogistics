@@ -25,7 +25,15 @@ const envSchema = z.object({
 export type Env = z.infer<typeof envSchema>;
 
 function loadEnv(): Env {
-  const parsed = envSchema.safeParse(process.env);
+  // Railway injects RAILWAY_GIT_COMMIT_SHA automatically — read it directly
+  // instead of requiring APP_VERSION to be manually wired to
+  // ${{RAILWAY_GIT_COMMIT_SHA}} in the dashboard, which is easy to typo or
+  // forget (this is exactly why /health's version was showing blank).
+  const input = {
+    ...process.env,
+    APP_VERSION: process.env.APP_VERSION || process.env.RAILWAY_GIT_COMMIT_SHA,
+  };
+  const parsed = envSchema.safeParse(input);
   if (!parsed.success) {
     console.error("Invalid environment configuration:", parsed.error.flatten().fieldErrors);
     process.exit(1);

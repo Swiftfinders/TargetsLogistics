@@ -20,8 +20,15 @@ is attached, auth (Phase 3+) cannot ship to production — see `CLAUDE.md`.
    filter so `packages/shared` builds first).
 7. **Output Directory**: leave default (`.next`).
 8. **Environment Variables** (Project Settings → Environment Variables):
-   - `API_URL` — `https://api.[DOMAIN]` in Production/Preview, `http://localhost:4000`
-     in Development.
+   - `API_URL` — server-side calls (marketing pages). `https://api.[DOMAIN]` in
+     Production/Preview, `http://localhost:4000` in Development.
+   - `NEXT_PUBLIC_API_URL` — same value, but exposed to the browser. Required for
+     the contact form and the client/staff portals (all client-side fetches) —
+     without it they silently fall back to `http://localhost:4000` and fail in
+     production. Must be set at **build time**, not just runtime (Next.js inlines
+     `NEXT_PUBLIC_*` vars during the build).
+   - `NEXT_PUBLIC_SITE_URL` — optional, only needed to override the canonical URL
+     used in metadata/sitemap/robots; falls back to Vercel's own URL otherwise.
 9. **Ignored Build Step** (Project Settings → Git): set the command to
    `npx turbo-ignore` so commits that only touch `apps/api/**` skip the web build.
 10. Attach the custom domain `www.[DOMAIN]` (Project Settings → Domains) once you
@@ -42,6 +49,14 @@ is attached, auth (Phase 3+) cannot ship to production — see `CLAUDE.md`.
      before the new instance takes traffic — never in the build step, since Railway
      builds can run more than once and concurrently, and a build-step migration can
      race across instances.
+2b. **Check Settings → Source → "Auto deploy"is enabled** right after connecting the
+    repo. It defaults to **disabled** on a fresh Railway service, which is easy to
+    miss — every push silently does nothing until you turn it on. If you've been
+    pushing and don't see new deployments, this is almost certainly why.
+2c. Using the **Deployments** tab's "Redeploy" on an old entry re-runs *that exact
+    old commit* — it does not pull the latest commit on the branch. To deploy
+    current `HEAD`, push a new commit that touches a watched path (see
+    `watchPatterns` above) with auto-deploy on, rather than redeploying an old entry.
 3. **Add a PostgreSQL plugin** to the project (Railway → New → Database →
    PostgreSQL). Railway injects `DATABASE_URL` into the service automatically when
    the plugin and the service share a project — reference it as
@@ -50,9 +65,11 @@ is attached, auth (Phase 3+) cannot ship to production — see `CLAUDE.md`.
    - `DATABASE_URL` — from the Postgres plugin (see above).
    - `CORS_ORIGINS` — `https://www.[DOMAIN]` (comma-separate if you also need a
      staging origin).
-   - `APP_VERSION` — set to `${{RAILWAY_GIT_COMMIT_SHA}}` so `/health` reports the
-     deployed commit.
    - `PORT` — Railway sets this automatically; do not override it.
+   - `APP_VERSION` is optional — the API reads Railway's own
+     `RAILWAY_GIT_COMMIT_SHA` automatically now, so `/health` reports the
+     deployed commit without any manual variable wiring. Only set `APP_VERSION`
+     explicitly if you want to override that.
 5. **Custom domain**: Service Settings → Networking → Custom Domain →
    `api.[DOMAIN]`. Add the CNAME Railway gives you at your DNS provider.
 6. **Healthcheck**: already configured via `railway.toml`
