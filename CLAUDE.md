@@ -101,9 +101,20 @@ Loading states that don't shift layout.
   Toast/Breadcrumb/Pagination — Tabs/Dialog/Toast on Radix Primitives, rest
   hand-rolled), site header/footer with an accessible mobile nav, and three real
   pages (home/about/contact). Contact form is a real Zod-validated Fastify route
-  writing to Postgres (`ContactSubmission`), not a stub. SEO/OG scaffolding
-  (`robots.ts`, `sitemap.ts`, `opengraph-image.tsx`, `<JsonLd>`, title template)
-  and a Lighthouse CI performance budget are wired into CI. See
-  `docs/DECISIONS.md` for the placeholder-service-tiles caveat and the
-  Turborepo env-passthrough bug this phase caught and fixed.
-- Phase 1 onward: not started. Stop-and-review gate per the rule above.
+  writing to Postgres (`ContactSubmission`), not a stub, and emails
+  kr2011@live.ca via Resend on submission. SEO/OG scaffolding (`robots.ts`,
+  `sitemap.ts`, `opengraph-image.tsx`, `<JsonLd>`, title template) and a
+  Lighthouse CI performance budget are wired into CI. See `docs/DECISIONS.md`
+  for the placeholder-service-tiles caveat and the Turborepo env-passthrough
+  bug this phase caught and fixed.
+- **Phase 2 (marketing SEO/AEO surface): built, not yet deployed.**
+  `/services` hub + 4 service pages, `/locations` hub + 3 city pages
+  (Kitchener/Waterloo/Cambridge, each ≥600 words of real, city-specific content
+  per the brief's own doorway-page quality gate), `/faq`. `Service`,
+  `BreadcrumbList` and `FAQPage` JSON-LD throughout, `llms.txt`, AI crawlers
+  (GPTBot/ClaudeBot/PerplexityBot/OAI-SearchBot/Google-Extended) explicitly
+  allowed in `robots.ts` — a business choice, reversible, see `docs/DECISIONS.md`.
+  Deferred (would require fabricating content): industries pages, team,
+  careers, resources/blog, legal pages (privacy/terms need real company/
+  jurisdiction details), integrations.
+- Phase 3 onward: not started.

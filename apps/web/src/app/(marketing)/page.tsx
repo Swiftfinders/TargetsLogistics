@@ -2,18 +2,12 @@ import Link from "next/link";
 import { JsonLd } from "@/components/json-ld";
 import { RouteIllustration } from "@/components/illustrations/route-illustration";
 import { VanIllustration } from "@/components/illustrations/van-illustration";
-import { OvernightIcon, RushIcon, SameDayIcon, ScheduledIcon } from "@/components/illustrations/service-icons";
 import { ScanTicker } from "@/components/scan-ticker";
 import { buttonClasses } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { locations } from "@/lib/locations";
+import { services } from "@/lib/services";
 import { getSiteUrl, siteConfig } from "@/lib/site";
-
-const SERVICE_TILES = [
-  { icon: SameDayIcon, name: "Same Day", note: "Pickup and delivery inside one business day" },
-  { icon: RushIcon, name: "Rush", note: "For when the clock is the whole problem" },
-  { icon: OvernightIcon, name: "Overnight", note: "Ready for pickup first thing the next morning" },
-  { icon: ScheduledIcon, name: "Scheduled", note: "Recurring runs on a schedule you set" },
-];
 
 export default function HomePage() {
   return (
@@ -39,8 +33,8 @@ export default function HomePage() {
               We&apos;ll get it there today
             </h1>
             <p className="mt-4 max-w-md text-base text-ink-muted">
-              Book a pickup in under a minute. Track it the whole way with a link you can send
-              straight to your customer, no login needed.
+              Send us the details and we&apos;ll follow up fast with a quote and a pickup time.
+              Every shipment is scanned at pickup, at the depot, and at delivery.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link href="/contact" prefetch={false} className={buttonClasses("primary", "md")}>
@@ -68,13 +62,20 @@ export default function HomePage() {
             Four ways to move a shipment, depending on how much time you&apos;ve got.
           </p>
           <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {SERVICE_TILES.map((tile) => (
-              <Card key={tile.name}>
-                <tile.icon />
-                <CardTitle className="mt-3">{tile.name}</CardTitle>
-                <CardDescription>{tile.note}</CardDescription>
-              </Card>
+            {services.map((service) => (
+              <Link key={service.slug} href={`/services/${service.slug}`}>
+                <Card className="h-full transition-colors hover:border-primary">
+                  <service.icon />
+                  <CardTitle className="mt-3">{service.name}</CardTitle>
+                  <CardDescription>{service.tagline}</CardDescription>
+                </Card>
+              </Link>
             ))}
+          </div>
+          <div className="mt-6">
+            <Link href="/services" className={buttonClasses("outline", "sm")}>
+              Compare all services
+            </Link>
           </div>
         </div>
       </section>
@@ -89,11 +90,13 @@ export default function HomePage() {
             <RouteIllustration className="w-full" />
           </div>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
-            {siteConfig.cities.map((city) => (
-              <Card key={city}>
-                <CardTitle>{city}</CardTitle>
-                <CardDescription>Pickup and delivery coverage.</CardDescription>
-              </Card>
+            {locations.map((location) => (
+              <Link key={location.slug} href={`/locations/${location.slug}`}>
+                <Card className="h-full transition-colors hover:border-primary">
+                  <CardTitle>{location.name}</CardTitle>
+                  <CardDescription>{location.intro}</CardDescription>
+                </Card>
+              </Link>
             ))}
           </div>
         </div>

@@ -2,7 +2,7 @@ export const siteConfig = {
   name: "Targets Logistics",
   tagline: "Same-day courier for Kitchener, Waterloo and Cambridge",
   description:
-    "Targets Logistics books, tracks, and delivers same-day shipments across Kitchener, Waterloo and Cambridge, with a live tracking link on every run.",
+    "Targets Logistics runs same-day, rush, overnight and scheduled courier service across Kitchener, Waterloo and Cambridge, with every shipment scanned at pickup, at the depot, and at delivery.",
   cities: ["Kitchener", "Waterloo", "Cambridge"] as const,
 };
 
@@ -14,6 +14,9 @@ export function getSiteUrl(): string {
 
 export const marketingNav = [
   { label: "Home", href: "/" },
+  { label: "Services", href: "/services" },
+  { label: "Locations", href: "/locations" },
   { label: "About", href: "/about" },
+  { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ] as const;

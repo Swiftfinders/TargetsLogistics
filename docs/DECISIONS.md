@@ -2,6 +2,38 @@
 
 Short entries, newest first. Each records what was decided, why, and what it blocks.
 
+## 2026-07-26 — Phase 2 scope and the doorway-page word count
+
+**Scoped down deliberately.** The full Phase 2 route tree in the brief includes
+industries, team, careers, resources/blog, legal, and integrations pages.
+Built only `/services`, `/locations` and `/faq` — everything else would need
+either fabricated content (team bios, job postings, blog posts, testimonials)
+or real legal/company details (privacy policy jurisdiction, registered
+address) that don't exist yet. Shipping fabricated versions would violate
+CLAUDE.md rule 4 outright, so they're deferred, not faked.
+
+**City content and the ≥600-word gate.** First draft of the three location
+pages ran 315-320 words each, well under the brief's own doorway-page
+threshold. Rewrote with genuinely city-specific detail rather than padding:
+real geography (Innovation District, Northfield Drive, the Galt/Preston/
+Hespeler split), real transit relationships between the three cities, named
+industrial corridors, and how each service tier maps to real local scenarios.
+All three now run 600+ words of non-templated content. No fourth city can be
+added by copying this file and swapping a name — the same word-count and
+specificity bar applies.
+
+**AI crawler access.** `robots.ts` now explicitly allows GPTBot, ClaudeBot,
+PerplexityBot, OAI-SearchBot and Google-Extended, per the brief's own AEO
+requirement. This is a business choice (citability by AI answer engines) and
+is trivially reversible by removing those rules.
+
+**Contact form email.** Wired to send to kr2011@live.ca via Resend,
+fire-and-forget after the Postgres write so a slow/misconfigured email
+provider never blocks or fails the actual submission. `RESEND_API_KEY` is
+optional in `env.ts` for this reason — without it the API still boots and the
+form still saves correctly, it just logs a warning and skips the email. Needs
+`RESEND_API_KEY` added to Railway before real emails go out.
+
 ## 2026-07-26 — Phase 1: design direction, dependencies, and a Turborepo bug
 
 **Design direction**: two rounds. First pass ("Dispatch Ledger") used muted
