@@ -48,3 +48,33 @@ export async function sendContactNotification(submission: ContactNotification): 
     logger.error({ err: error }, "failed to send contact notification email");
   }
 }
+
+export async function sendPasswordSetupEmail(params: {
+  to: string;
+  name: string;
+  token: string;
+  purpose: "invite" | "reset";
+}): Promise<void> {
+  if (!resend) {
+    logger.warn(`RESEND_API_KEY not set — skipping ${params.purpose} email to ${params.to}`);
+    return;
+  }
+
+  const link = `${env.WEB_URL}/reset-password?token=${encodeURIComponent(params.token)}`;
+  const subject = params.purpose === "invite" ? "Set up your Targets Logistics account" : "Reset your Targets Logistics password";
+  const intro =
+    params.purpose === "invite"
+      ? `Hi ${params.name}, an account has been set up for you at Targets Logistics.`
+      : `Hi ${params.name}, we received a request to reset your password.`;
+
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: params.to,
+      subject,
+      text: `${intro}\n\nSet your password here (link expires in 30 minutes):\n${link}\n\nIf you didn't expect this, you can ignore this email.`,
+    });
+  } catch (error) {
+    logger.error({ err: error }, `failed to send ${params.purpose} email`);
+  }
+}

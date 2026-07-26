@@ -7,14 +7,159 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Phase 0 placeholder — expanded into the full account/session/order schema in Phase 3.
-model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+enum UserType {
+  STAFF
+  CLIENT
+}
 
+enum UserStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+}
+
+enum AccountStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum ServiceTier {
+  SAME_DAY
+  RUSH
+  OVERNIGHT
+  SCHEDULED
+}
+
+enum RequestStatus {
+  NEW
+  ACKNOWLEDGED
+  CLOSED
+}
+
+// A client company. Staff creates the account and its first user — no public
+// self-registration (v1 scope, see docs/DECISIONS.md).
+model Account {
+  id        String        @id @default(uuid())
+  name      String
+  status    AccountStatus @default(ACTIVE)
+  createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  users            User[]
+  shipmentRequests ShipmentRequest[]
+
+  @@map("account")
+}
+
+// One table for both staff and client logins, distinguished by userType.
+// Every auth check tests userType explicitly rather than inferring role from
+// accountId being null — see CLAUDE.md.
+model User {
+  id                  String     @id @default(uuid())
+  email               String     @unique
+  passwordHash        String     @map("password_hash")
+  name                String
+  phone               String?
+  userType            UserType   @map("user_type")
+  status              UserStatus @default(ACTIVE)
+  accountId           String?    @map("account_id")
+  failedLoginAttempts Int        @default(0) @map("failed_login_attempts")
+  lockedUntil         DateTime?  @map("locked_until") @db.Timestamptz(3)
+  lastLoginAt         DateTime?  @map("last_login_at") @db.Timestamptz(3)
+  createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  account                 Account?             @relation(fields: [accountId], references: [id])
+  sessions                Session[]
+  passwordResetTokens     PasswordResetToken[]
+  shipmentRequestsCreated ShipmentRequest[]    @relation("ShipmentRequestCreatedBy")
+  auditLogs               AuditLog[]
+
+  @@index([accountId])
   @@map("user")
+}
+
+// Opaque bearer tokens, not JWTs — only the SHA-256 hash is stored, so a DB
+// leak alone doesn't hand out valid sessions. userType is duplicated onto the
+// session (not just looked up via user) so a staff-cookie check never has to
+// trust anything beyond the session row it just validated.
+model Session {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  userType  UserType  @map("user_type")
+  ip        String?
+  userAgent String?   @map("user_agent")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+// Single-use tokens for both "forgot password" and "staff invited you, set
+// your password" — same mechanism, same expiry.
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String    @map("user_id")
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("password_reset_token")
+}
+
+// A client's structured shipment request, submitted through the portal.
+// Deliberately not a full order/waybill/tracking model yet — see
+// docs/DECISIONS.md for what's deferred and why.
+model ShipmentRequest {
+  id              String        @id @default(uuid())
+  accountId       String        @map("account_id")
+  createdByUserId String        @map("created_by_user_id")
+  pickupAddress   String        @map("pickup_address")
+  dropoffAddress  String        @map("dropoff_address")
+  description     String
+  neededBy        DateTime      @map("needed_by") @db.Timestamptz(3)
+  serviceTier     ServiceTier   @map("service_tier")
+  pieces          Int?
+  weightKg        Float?        @map("weight_kg")
+  status          RequestStatus @default(NEW)
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  account   Account @relation(fields: [accountId], references: [id])
+  createdBy User    @relation("ShipmentRequestCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@map("shipment_request")
+}
+
+// Staff mutations only (client actions on their own data aren't logged here
+// yet — add when there's more than one client-side mutation to distinguish).
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?  @map("actor_id")
+  action     String
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  before     Json?
+  after      Json?
+  ip         String?
+  at         DateTime @default(now()) @db.Timestamptz(3)
+
+  actor User? @relation(fields: [actorId], references: [id])
+
+  @@index([entityType, entityId])
+  @@map("audit_log")
 }
 
 // Public marketing contact form submissions. No auth/account scope — this is an

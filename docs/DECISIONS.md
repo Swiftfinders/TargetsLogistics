@@ -2,6 +2,42 @@
 
 Short entries, newest first. Each records what was decided, why, and what it blocks.
 
+## 2026-07-26 — Phase 3 re-scoped down; real gaps this leaves
+
+**Re-scoped mid-build, on explicit request.** Was mid-way through the
+original brief's full Phase 3 (order/waybill state machine, rate cards,
+zones, invoicing, drivers, webhooks, api_keys — the whole logistics data
+model) when told the business doesn't need any of that yet, just staff login
+and a client portal for structured requests. Dropped everything except
+`Account`, `User`, `Session`, `PasswordResetToken`, `ShipmentRequest`,
+`AuditLog`. The full model from the original brief is real, well-specified
+work — it's not gone, just not needed yet. Re-add it when there's an actual
+order to track, not speculatively.
+
+**Confirmed decisions from that scoping conversation:**
+- Shipment request fields: pickup address, dropoff address, description,
+  needed-by date/time, preferred service tier, pieces/weight. No rate
+  calculation — staff quotes manually, same as the existing contact form.
+- Clients don't self-register. Staff creates the `Account` + first `User` via
+  `POST /staff/clients`, which emails an invite (set-password) link.
+- No MFA for staff in this pass — explicitly deferred, not an oversight.
+  Login is email + password only.
+
+**Auth cookie architecture still needs a real domain.** `tl_staff_session`
+and `tl_client_session` are httpOnly/Secure/SameSite=Lax, host-only unless
+`COOKIE_DOMAIN` is set. In production, Vercel (`www`) and Railway (`api`) are
+different origins entirely without a custom domain, so login literally
+cannot work in production yet — this isn't a bug to fix later, it's the same
+domain prerequisite the original brief flagged before Phase 3 even started
+(Part 4, gotcha #1). Verified working end-to-end locally (both on
+`localhost`, trivially same-site) via 12 passing integration tests, including
+the cross-account isolation check (404, never 403).
+
+**Backend only so far.** `docs/API.md` covers the full route surface, but
+there's no actual login form or portal page yet — a client or staff member
+has nothing to click through in a browser. That's next, immediately, not a
+separate phase-gate wait.
+
 ## 2026-07-26 — Phase 2 scope and the doorway-page word count
 
 **Scoped down deliberately.** The full Phase 2 route tree in the brief includes

@@ -13,6 +13,13 @@ const envSchema = z.object({
   // this is configured on Railway. The contact route logs a clear warning and
   // still succeeds the DB write if it's unset — see lib/email.ts.
   RESEND_API_KEY: z.string().optional(),
+  // Unset until a real domain is attached (see CLAUDE.md — auth cookies need
+  // it). Leaving it unset makes cookies host-only, which is exactly right for
+  // local dev but means cross-subdomain auth (www vs api) won't work in
+  // production until this is set to ".yourdomain.com".
+  COOKIE_DOMAIN: z.string().optional(),
+  // Base URL of apps/web, used to build links in emails (password reset, etc).
+  WEB_URL: z.string().url().default("http://localhost:3000"),
 });
 
 export type Env = z.infer<typeof envSchema>;
