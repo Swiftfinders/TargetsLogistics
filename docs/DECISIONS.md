@@ -2,6 +2,25 @@
 
 Short entries, newest first. Each records what was decided, why, and what it blocks.
 
+## 2026-07-26 — Phase 0 confirmed live in production
+
+Both services deployed and verified end-to-end:
+- **Railway** (`apps/api`): Dockerfile build, Postgres plugin attached, `/health`
+  returns `db: "up"` at `https://targetslogistics-production.up.railway.app`.
+  `APP_VERSION` currently resolves empty instead of a commit SHA — cosmetic, worth
+  rechecking the `${{RAILWAY_GIT_COMMIT_SHA}}` variable reference later, not blocking.
+- **Vercel** (`apps/web`): deployed with Root Directory `apps/web`, Next.js preset,
+  "include files outside root" enabled, `API_URL` pointing at the Railway domain
+  above. Production page confirmed rendering the live `status: ok / db: up` payload
+  fetched server-side from Railway.
+- **Open follow-up**: `CORS_ORIGINS` on Railway should point at Vercel's stable
+  production alias (Project → Domains, no random hash), not a hashed
+  per-deployment URL — the hashed one changes on every deploy. Not blocking yet
+  since the current page fetches server-side (bypasses browser CORS entirely);
+  will matter once client-side calls are added (Phase 4+ portal).
+- No custom domain attached yet — both services are on their platform-provided
+  URLs. Real `[DOMAIN]` still required before Phase 3 auth (cookie scoping).
+
 ## 2026-07-26 — Phase 0 scope and business-decision placeholders
 
 **Context**: the build brief's Part 0 lists several business decisions (company

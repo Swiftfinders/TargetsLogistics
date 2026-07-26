@@ -89,6 +89,10 @@ Real empty states and error states (never a blank div or a raw error string).
 Loading states that don't shift layout.
 
 ## Phase status
-- **Phase 0 (monorepo skeleton that deploys): done**, pending your review. See
-  `docs/DEPLOYMENT.md` for the exact Vercel/Railway click-path.
+- **Phase 0 (monorepo skeleton that deploys): done and confirmed live in
+  production.** Both `apps/web` (Vercel) and `apps/api` (Railway + Postgres) are
+  deployed, `/health` reports `db: "up"`, and the production Vercel page renders
+  that payload fetched server-side from Railway. See `docs/DEPLOYMENT.md` for the
+  click-path and `docs/DECISIONS.md` for open follow-ups (CORS origin should move
+  to Vercel's stable alias once picked; no custom domain yet).
 - Phase 1 onward: not started. Stop-and-review gate per the rule above.
