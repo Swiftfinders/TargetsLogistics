@@ -1,0 +1,14 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "apps/api/Dockerfile"
+watchPatterns = ["apps/api/**", "packages/shared/**", "packages/config/**", "pnpm-lock.yaml"]
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 10
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 3
+# Run migrations as the release command, never in the build step — Railway builds
+# can run more than once and concurrently, and a build-step migration can race.
+releaseCommand = "node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma"
+startCommand = "node dist/server.js"
