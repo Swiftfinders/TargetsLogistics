@@ -42,25 +42,12 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --tl-bg: #0e1020;
-    --tl-bg-raised: #171a2e;
-    --tl-bg-sunken: #121427;
-    --tl-ink: #f2f3f8;
-    --tl-ink-muted: #9a9fb5;
-    --tl-primary: #6f89ff;
-    --tl-primary-ink: #0b0e22;
-    --tl-accent: #ff8c69;
-    --tl-accent-ink: #2a0e02;
-    --tl-confirm: #2fe0c0;
-    --tl-confirm-bg: #0f2a26;
-    --tl-line: #2a2d47;
-    --tl-focus: #f2f3f8;
-    color-scheme: dark;
-  }
-}
-
+/*
+ * Deliberately no `@media (prefers-color-scheme: dark)` override — the site
+ * always renders light/white regardless of OS preference. The dark token set
+ * stays defined below under [data-theme="dark"] in case a manual toggle gets
+ * added later; it just doesn't kick in automatically.
+ */
 :root[data-theme="dark"] {
   --tl-bg: #0e1020;
   --tl-bg-raised: #171a2e;

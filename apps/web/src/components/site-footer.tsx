@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/logo";
 import { marketingNav, siteConfig } from "@/lib/site";
 
 export function SiteFooter() {
@@ -6,8 +7,8 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-bg-raised">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 md:flex-row md:items-start md:justify-between">
         <div>
-          <p className="font-display text-base font-extrabold text-ink">{siteConfig.name}</p>
-          <p className="mt-1 max-w-xs text-sm text-ink-muted">{siteConfig.tagline}.</p>
+          <Logo />
+          <p className="mt-2 max-w-xs text-sm text-ink-muted">{siteConfig.tagline}.</p>
           <p className="mt-3 text-xs uppercase tracking-wide text-ink-muted">
             {siteConfig.cities.join(" · ")}
           </p>

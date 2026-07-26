@@ -5,13 +5,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/cn";
-import { marketingNav, siteConfig } from "@/lib/site";
+import { marketingNav } from "@/lib/site";
 import { buttonClasses } from "@/components/ui/button";
+import { Logo } from "@/components/logo";
 
 function Wordmark() {
   return (
-    <Link href="/" prefetch={false} className="font-display text-lg font-extrabold tracking-tight text-ink">
-      {siteConfig.name}
+    <Link href="/" prefetch={false} aria-label="Targets Logistics, home">
+      <Logo />
     </Link>
   );
 }
