@@ -9,6 +9,10 @@ const envSchema = z.object({
     .min(1, "CORS_ORIGINS must be a comma-separated list of allowed origins")
     .transform((value) => value.split(",").map((origin) => origin.trim())),
   APP_VERSION: z.string().default("0.0.0"),
+  // Optional so the API keeps booting (health checks, everything else) before
+  // this is configured on Railway. The contact route logs a clear warning and
+  // still succeeds the DB write if it's unset — see lib/email.ts.
+  RESEND_API_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;

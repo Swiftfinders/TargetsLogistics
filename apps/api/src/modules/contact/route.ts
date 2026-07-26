@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { contactSubmissionInputSchema, type ContactSubmissionResponse } from "@targets/shared";
 import { prisma } from "../../lib/db.js";
+import { sendContactNotification } from "../../lib/email.js";
 
 export async function contactRoutes(app: FastifyInstance) {
   app.post("/contact", async (request, reply) => {
@@ -16,6 +17,10 @@ export async function contactRoutes(app: FastifyInstance) {
         company: parsed.data.company ?? null,
       },
     });
+
+    // Fire-and-forget: the submission is already durably stored above, so a
+    // slow or failing email provider should never hold up or fail the response.
+    void sendContactNotification(submission);
 
     const body: ContactSubmissionResponse = {
       id: submission.id,
