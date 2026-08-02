@@ -5,7 +5,8 @@ export type Action =
   | "shipmentRequest:readOwn"
   | "shipmentRequest:readAny"
   | "shipmentRequest:updateStatus"
-  | "client:create";
+  | "client:create"
+  | "signup:review";
 
 export interface Actor {
   userType: UserType;
@@ -21,7 +22,8 @@ export function can(actor: Actor, action: Action): boolean {
     return (
       action === "shipmentRequest:readAny" ||
       action === "shipmentRequest:updateStatus" ||
-      action === "client:create"
+      action === "client:create" ||
+      action === "signup:review"
     );
   }
 

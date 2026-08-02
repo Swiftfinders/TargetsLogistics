@@ -49,6 +49,25 @@ export async function sendContactNotification(submission: ContactNotification): 
   }
 }
 
+export async function sendSignupNotification(signup: { name: string; email: string; company: string }): Promise<void> {
+  if (!resend) {
+    logger.warn("RESEND_API_KEY not set — skipping signup notification email");
+    return;
+  }
+
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: CONTACT_NOTIFICATION_EMAIL,
+      replyTo: signup.email,
+      subject: `New client signup awaiting approval: ${signup.company}`,
+      text: `${signup.name} (${signup.email}) at ${signup.company} requested portal access.\n\nApprove or reject from the staff dashboard.`,
+    });
+  } catch (error) {
+    logger.error({ err: error }, "failed to send signup notification email");
+  }
+}
+
 export async function sendPasswordSetupEmail(params: {
   to: string;
   name: string;

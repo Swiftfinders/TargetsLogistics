@@ -37,6 +37,14 @@ email, phone?, company?, message). `201` with `{ id, receivedAt }`. Persists
 to Postgres and best-effort emails a notification — a failed email never
 fails the request (the DB write already succeeded).
 
+### `POST /signup`
+Public self-serve request for portal access. Body: `signupRequestInputSchema`
+(`name`, `email`, `company`). Creates an `Account` and a `CLIENT` user with
+`status: PENDING` in one transaction — the account can't log in until staff
+approves it (see `POST /staff/signups/:id/approve` below). `201 {"ok":true}`.
+`409` if the email is already registered. Rate-limited to 10 attempts / 15
+minutes per IP.
+
 ## Auth routes
 
 ### `POST /auth/staff/login` / `POST /auth/client/login`
@@ -97,6 +105,20 @@ Body: `createClientInputSchema` (accountName, userName, email). Creates a new
 entry, and emails an invite link (same single-use/30-minute mechanism as
 password reset) — the user has no usable password until they follow it.
 `409` if the email is already registered.
+
+### `GET /staff/signups`
+Cursor-paginated list of `CLIENT` users with `status: PENDING` (self-serve
+signups awaiting review), newest first. `{ items, nextCursor }`.
+
+### `POST /staff/signups/:id/approve`
+Sets the user's status to `INVITED`, writes an audit log entry, and emails
+the same invite/set-password link as `POST /staff/clients`. `404` if the
+user doesn't exist or isn't `PENDING`.
+
+### `POST /staff/signups/:id/reject`
+Sets the user's status to `SUSPENDED` (keeps the record for reference rather
+than deleting it) and writes an audit log entry. `404` if the user doesn't
+exist or isn't `PENDING`.
 
 ## What's deliberately not here yet
 

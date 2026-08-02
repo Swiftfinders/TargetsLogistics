@@ -136,5 +136,16 @@ Loading states that don't shift layout.
   cookies won't actually work in production until `COOKIE_DOMAIN` is set**,
   which needs a real custom domain attached to both Vercel and Railway first —
   still don't have one.
+- **Self-serve client signup (post-Phase-3 addition): done, not yet
+  deployed.** Reverses the original "staff creates clients only" call (see
+  `docs/DECISIONS.md`, 2026-08-02) — public `POST /signup` + `/portal/signup`
+  now let a prospective client submit name/email/company themselves. Creates
+  a `PENDING` account/user that can't log in until staff approves it from the
+  `/staff` dashboard's new "Pending signups" section (`GET /staff/signups`,
+  `POST /staff/signups/:id/approve|reject`); approval sends the same
+  invite/set-password email as the staff-initiated flow, reject suspends
+  rather than deletes. `POST /staff/clients` (staff-initiated, no approval
+  step) still exists for when staff onboards a client directly. Verified with
+  6 new integration tests plus a live Playwright walkthrough.
 - Phase 4+ (order tracking, rate cards, invoicing, everything else in the
   original brief): not started.

@@ -35,3 +35,12 @@ export const createClientInputSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
 });
 export type CreateClientInput = z.infer<typeof createClientInputSchema>;
+
+// Public self-serve signup: name/email/company anyone can submit. Creates a
+// PENDING account+user pair that can't log in until staff approves it.
+export const signupRequestInputSchema = z.object({
+  name: z.string().trim().min(1, "Enter your name").max(200),
+  email: z.string().trim().toLowerCase().email(),
+  company: z.string().trim().min(1, "Enter your company name").max(200),
+});
+export type SignupRequestInput = z.infer<typeof signupRequestInputSchema>;

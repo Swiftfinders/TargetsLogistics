@@ -10,6 +10,7 @@ import { contactRoutes } from "./modules/contact/route.js";
 import { authRoutes } from "./modules/auth/route.js";
 import { portalRoutes } from "./modules/portal/route.js";
 import { staffRoutes } from "./modules/staff/route.js";
+import { signupRoutes } from "./modules/signup/route.js";
 
 export async function buildApp() {
   const app = Fastify({ loggerInstance: logger });
@@ -30,6 +31,7 @@ export async function buildApp() {
   await app.register(authRoutes);
   await app.register(portalRoutes);
   await app.register(staffRoutes);
+  await app.register(signupRoutes);
 
   return app;
 }

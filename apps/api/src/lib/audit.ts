@@ -1,7 +1,9 @@
 import { prisma } from "./db.js";
 
 export interface AuditEntry {
-  actorId: string;
+  // Absent for unauthenticated actions (e.g. a public signup request) — the
+  // DB column is nullable for exactly this case.
+  actorId?: string;
   action: string;
   entityType: string;
   entityId: string;
@@ -13,7 +15,7 @@ export interface AuditEntry {
 export function writeAuditLog(entry: AuditEntry): Promise<unknown> {
   return prisma.auditLog.create({
     data: {
-      actorId: entry.actorId,
+      actorId: entry.actorId ?? null,
       action: entry.action,
       entityType: entry.entityType,
       entityId: entry.entityId,

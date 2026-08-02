@@ -104,4 +104,75 @@ export async function staffRoutes(app: FastifyInstance) {
 
     return reply.code(201).send({ account, user: { id: user.id, email: user.email, name: user.name } });
   });
+
+  app.get("/staff/signups", { preHandler: requireStaff }, async (request, reply) => {
+    const query = request.query as { cursor?: string; limit?: string };
+    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+
+    const items = await prisma.user.findMany({
+      where: { status: "PENDING" },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      include: { account: { select: { name: true } } },
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = items.length > limit;
+    const page = hasMore ? items.slice(0, limit) : items;
+    const body = page.map((item) => ({
+      id: item.id,
+      email: item.email,
+      name: item.name,
+      accountName: item.account?.name ?? null,
+      createdAt: item.createdAt,
+    }));
+
+    return reply.send({ items: body, nextCursor: hasMore ? page[page.length - 1]?.id : null });
+  });
+
+  app.post("/staff/signups/:id/approve", { preHandler: requireStaff }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.status !== "PENDING") return reply.code(404).send({ error: "not_found" });
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({ where: { id }, data: { status: "INVITED" } });
+      await writeAuditLog({
+        actorId: request.authUser!.id,
+        action: "signup.approved",
+        entityType: "user",
+        entityId: id,
+        before: { status: existing.status },
+        after: { status: "INVITED" },
+        ip: request.ip,
+      });
+      return result;
+    });
+
+    await issuePasswordSetupToken(updated.id, "invite");
+
+    return reply.send({ id: updated.id, status: updated.status });
+  });
+
+  app.post("/staff/signups/:id/reject", { preHandler: requireStaff }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const existing = await prisma.user.findUnique({ where: { id } });
+    if (!existing || existing.status !== "PENDING") return reply.code(404).send({ error: "not_found" });
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.user.update({ where: { id }, data: { status: "SUSPENDED" } });
+      await writeAuditLog({
+        actorId: request.authUser!.id,
+        action: "signup.rejected",
+        entityType: "user",
+        entityId: id,
+        before: { status: existing.status },
+        after: { status: "SUSPENDED" },
+        ip: request.ip,
+      });
+      return result;
+    });
+
+    return reply.send({ id: updated.id, status: updated.status });
+  });
 }

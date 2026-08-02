@@ -2,6 +2,45 @@
 
 Short entries, newest first. Each records what was decided, why, and what it blocks.
 
+## 2026-08-02 — Self-serve client signup reverses the "staff creates clients only" call
+
+**Reverses a Phase 3 decision.** The Phase 3 re-scoping entry below says
+"clients don't self-register... staff creates the Account + first User."
+Explicit new instruction: one staff login should handle both quotations
+coming in *and* approving signups from prospective clients — i.e. public
+self-registration, gated by staff approval instead of staff-initiated
+creation.
+
+**What changed:**
+- `User.status` gained a `PENDING` value (`PENDING → INVITED → ACTIVE`,
+  or `SUSPENDED` at any point). `PENDING` means self-signed-up, not yet
+  reviewed, no usable password — `attemptLogin` already rejects anything but
+  `ACTIVE`, so this required no auth-path changes.
+- `POST /signup` (public, rate-limited like login) takes name/email/company,
+  creates an `Account` + `PENDING` `CLIENT` `User`, and best-effort emails
+  staff a notification. Same placeholder-password pattern as
+  `POST /staff/clients` — the row exists but nothing can log into it yet.
+- `GET /staff/signups` + `POST /staff/signups/:id/{approve,reject}` on the
+  existing staff dashboard. Approve flips `PENDING → INVITED` and fires the
+  same invite/set-password email as the staff-initiated flow. Reject flips to
+  `SUSPENDED` rather than deleting the row — keeps an audit trail of who
+  asked and was turned down, consistent with never hard-deleting audit-logged
+  entities elsewhere in this schema.
+- `POST /staff/clients` (staff creates a client directly, no approval step)
+  is kept as-is, not removed — it's still the right tool when staff is
+  onboarding a client themselves rather than waiting for them to ask.
+- Web: public `/portal/signup` page, linked from `/portal/login`
+  ("New client? Request access"); `/staff` dashboard gained a "Pending
+  signups" section above the existing quotations table with Approve/Reject
+  buttons, so the "one staff login controls both" requirement is one page,
+  not two.
+
+**Verified**: 6 new integration tests (pending-status creation, duplicate
+email 409, pending user can't log in, staff list/approve/reject, unauth
+rejected) plus a live Playwright walkthrough (submit signup → confirm
+pending login is rejected → staff logs in → sees the pending row → approves
+→ row disappears, invite email logged as sent).
+
 ## 2026-07-26 — Phase 3 re-scoped down; real gaps this leaves
 
 **Re-scoped mid-build, on explicit request.** Was mid-way through the
@@ -20,6 +59,8 @@ order to track, not speculatively.
   calculation — staff quotes manually, same as the existing contact form.
 - Clients don't self-register. Staff creates the `Account` + first `User` via
   `POST /staff/clients`, which emails an invite (set-password) link.
+  **Superseded 2026-08-02** — see the entry above; public self-serve signup
+  now exists alongside this, gated by staff approval instead of removed.
 - No MFA for staff in this pass — explicitly deferred, not an oversight.
   Login is email + password only.
 

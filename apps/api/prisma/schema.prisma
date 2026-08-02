@@ -12,9 +12,13 @@ enum UserType {
   CLIENT
 }
 
+// PENDING: self-signed-up, awaiting staff approval — no usable password yet.
+// INVITED: approved (or staff-created directly), set-password email sent.
+// ACTIVE: password set, can log in.
 enum UserStatus {
-  ACTIVE
+  PENDING
   INVITED
+  ACTIVE
   SUSPENDED
 }
 
@@ -36,8 +40,8 @@ enum RequestStatus {
   CLOSED
 }
 
-// A client company. Staff creates the account and its first user — no public
-// self-registration (v1 scope, see docs/DECISIONS.md).
+// A client company. Created either by a public signup request once staff
+// approves it, or directly by staff — see User.status for the signup flow.
 model Account {
   id        String        @id @default(uuid())
   name      String

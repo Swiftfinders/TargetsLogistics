@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Logo } from "@/components/logo";
 import { LoginForm } from "@/components/login-form";
 
@@ -19,6 +20,12 @@ export default function PortalLoginPage() {
         <div className="mt-6">
           <LoginForm kind="client" redirectTo="/portal" />
         </div>
+        <p className="mt-6 text-center text-sm text-ink-muted">
+          New client?{" "}
+          <Link href="/portal/signup" prefetch={false} className="font-semibold text-accent">
+            Request access
+          </Link>
+        </p>
       </div>
     </div>
   );
