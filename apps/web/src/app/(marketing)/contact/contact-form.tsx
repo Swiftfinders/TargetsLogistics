@@ -2,25 +2,31 @@
 
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { LOAD_SIZE_DETAILS, type LoadSize } from "@targets/shared";
 import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Textarea } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { publicEnv } from "@/lib/public-env";
 
-type FieldErrors = Partial<Record<"name" | "email" | "phone" | "company" | "message", string>>;
+type FieldErrors = Partial<Record<"name" | "email" | "phone" | "company" | "loadSize" | "message", string>>;
 
-const initialValues = { name: "", email: "", phone: "", company: "", message: "" };
+const initialValues = { name: "", email: "", phone: "", company: "", loadSize: "", message: "" };
 
-/**
- * Validates just enough client-side for immediate feedback. The API's Zod schema
- * is the actual source of truth (CLAUDE.md rule 1) — importing it here too would
- * pull the whole zod runtime into the client bundle for a form this small, and
- * blow the marketing route JS budget for no real benefit over native validation.
- */
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(0)}`;
+
+const LOAD_SIZE_OPTIONS: { value: LoadSize; label: string }[] = (
+  Object.entries(LOAD_SIZE_DETAILS) as [LoadSize, (typeof LOAD_SIZE_DETAILS)[LoadSize]][]
+).map(([value, d]) => ({
+  value,
+  label: `${d.label} — ${d.vehicle} · ${d.weightLimit} · ${formatPrice(d.priceCents)}`,
+}));
+
 function validate(values: typeof initialValues): FieldErrors {
   const errors: FieldErrors = {};
   if (!values.name.trim()) errors.name = "Enter your name";
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) errors.email = "Enter a valid email address";
+  if (!values.loadSize) errors.loadSize = "Select a load size";
   if (!values.message.trim()) errors.message = "Enter a message";
   return errors;
 }
@@ -52,6 +58,7 @@ export function ContactForm() {
           email: values.email.trim(),
           phone: values.phone.trim() || undefined,
           company: values.company.trim() || undefined,
+          loadSize: values.loadSize,
           message: values.message.trim(),
         }),
       });
@@ -59,7 +66,7 @@ export function ContactForm() {
       if (response.status === 400) {
         const body = (await response.json()) as { issues?: Record<string, string[]> };
         const serverErrors: FieldErrors = {};
-        for (const key of ["name", "email", "phone", "company", "message"] as const) {
+        for (const key of ["name", "email", "phone", "company", "loadSize", "message"] as const) {
           const issue = body.issues?.[key]?.[0];
           if (issue) serverErrors[key] = issue;
         }
@@ -157,6 +164,26 @@ export function ContactForm() {
           aria-describedby={errors.company ? "company-error" : undefined}
         />
         <FieldError id="company-error">{errors.company}</FieldError>
+      </div>
+
+      <div>
+        <Label htmlFor="loadSize">Load size</Label>
+        <Select
+          id="loadSize"
+          name="loadSize"
+          value={values.loadSize}
+          onChange={(e) => setValues((v) => ({ ...v, loadSize: e.target.value }))}
+          aria-invalid={Boolean(errors.loadSize)}
+          aria-describedby={errors.loadSize ? "loadSize-error" : undefined}
+        >
+          <option value="">Select a load size</option>
+          {LOAD_SIZE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </Select>
+        <FieldError id="loadSize-error">{errors.loadSize}</FieldError>
       </div>
 
       <div>

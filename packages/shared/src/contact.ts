@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { loadSizeSchema } from "./shipment-request.js";
 
 export const contactSubmissionInputSchema = z.object({
   name: z.string().trim().min(1, "Enter your name").max(200),
@@ -15,6 +16,7 @@ export const contactSubmissionInputSchema = z.object({
     .max(200)
     .optional()
     .transform((value) => (value ? value : undefined)),
+  loadSize: loadSizeSchema,
   message: z.string().trim().min(1, "Enter a message").max(4000),
 });
 

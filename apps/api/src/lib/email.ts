@@ -16,6 +16,7 @@ interface ContactNotification {
   email: string;
   phone?: string | null;
   company?: string | null;
+  loadSize: string;
   message: string;
 }
 
@@ -30,6 +31,7 @@ export async function sendContactNotification(submission: ContactNotification): 
     `Email: ${submission.email}`,
     submission.phone ? `Phone: ${submission.phone}` : null,
     submission.company ? `Company: ${submission.company}` : null,
+    `Load size: ${submission.loadSize}`,
     "",
     submission.message,
   ].filter((line): line is string => line !== null);

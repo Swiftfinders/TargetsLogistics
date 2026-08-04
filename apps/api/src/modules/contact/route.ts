@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { contactSubmissionInputSchema, type ContactSubmissionResponse } from "@targets/shared";
+import { contactSubmissionInputSchema, LOAD_SIZE_DETAILS, type LoadSize, type ContactSubmissionResponse } from "@targets/shared";
 import { prisma } from "../../lib/db.js";
 import { sendContactNotification } from "../../lib/email.js";
 
@@ -12,15 +12,24 @@ export async function contactRoutes(app: FastifyInstance) {
 
     const submission = await prisma.contactSubmission.create({
       data: {
-        ...parsed.data,
+        name: parsed.data.name,
+        email: parsed.data.email,
         phone: parsed.data.phone ?? null,
         company: parsed.data.company ?? null,
+        loadSize: parsed.data.loadSize,
+        message: parsed.data.message,
       },
     });
 
-    // Fire-and-forget: the submission is already durably stored above, so a
-    // slow or failing email provider should never hold up or fail the response.
-    void sendContactNotification(submission);
+    const loadDetails = LOAD_SIZE_DETAILS[parsed.data.loadSize as LoadSize];
+    void sendContactNotification({
+      name: submission.name,
+      email: submission.email,
+      phone: submission.phone,
+      company: submission.company,
+      loadSize: `${loadDetails.label} — ${loadDetails.vehicle} · ${loadDetails.weightLimit}`,
+      message: submission.message,
+    });
 
     const body: ContactSubmissionResponse = {
       id: submission.id,

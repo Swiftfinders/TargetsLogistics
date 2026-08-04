@@ -67,6 +67,7 @@ interface ContactRow {
   email: string;
   phone: string | null;
   company: string | null;
+  loadSize: string;
   message: string;
   createdAt: string;
 }
@@ -444,6 +445,7 @@ function ContactsTab() {
           <TableHeaderCell>Name</TableHeaderCell>
           <TableHeaderCell>Email</TableHeaderCell>
           <TableHeaderCell>Company</TableHeaderCell>
+          <TableHeaderCell>Load size</TableHeaderCell>
           <TableHeaderCell>Message</TableHeaderCell>
           <TableHeaderCell>Received</TableHeaderCell>
         </TableRow>
@@ -454,6 +456,7 @@ function ContactsTab() {
             <TableCell className="font-medium">{item.name}</TableCell>
             <TableCell>{item.email}</TableCell>
             <TableCell>{item.company ?? "—"}</TableCell>
+            <TableCell>{LOAD_SIZE_LABELS[item.loadSize] ?? item.loadSize}</TableCell>
             <TableCell>
               <span className="line-clamp-2 max-w-xs text-sm">{item.message}</span>
             </TableCell>

@@ -181,6 +181,7 @@ model ContactSubmission {
   email     String
   phone     String?
   company   String?
+  loadSize  LoadSize @map("load_size")
   message   String
   createdAt DateTime @default(now()) @map("created_at")
 
