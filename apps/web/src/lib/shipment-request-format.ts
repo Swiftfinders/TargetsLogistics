@@ -5,6 +5,12 @@ export const SERVICE_TIER_LABELS: Record<string, string> = {
   SCHEDULED: "Scheduled",
 };
 
+export const LOAD_SIZE_LABELS: Record<string, string> = {
+  SMALL: "Small",
+  MEDIUM: "Medium",
+  LARGE: "Large",
+};
+
 export const REQUEST_STATUS_LABELS: Record<string, string> = {
   NEW: "New",
   ACKNOWLEDGED: "Acknowledged",

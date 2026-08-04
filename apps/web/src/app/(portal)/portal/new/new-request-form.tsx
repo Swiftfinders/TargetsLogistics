@@ -7,6 +7,16 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label, Textarea } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { publicEnv } from "@/lib/public-env";
+import { LOAD_SIZE_DETAILS, type LoadSize } from "@targets/shared";
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+const LOAD_SIZE_OPTIONS: { value: LoadSize; label: string }[] = (
+  Object.entries(LOAD_SIZE_DETAILS) as [LoadSize, (typeof LOAD_SIZE_DETAILS)[LoadSize]][]
+).map(([value, d]) => ({
+  value,
+  label: `${d.label} — ${d.vehicle} · ${d.weightLimit} · ${formatPrice(d.priceCents)}`,
+}));
 
 const initialValues = {
   pickupAddress: "",
@@ -14,6 +24,7 @@ const initialValues = {
   description: "",
   neededBy: "",
   serviceTier: "SAME_DAY",
+  loadSize: "SMALL" as string,
   pieces: "",
   weightKg: "",
 };
@@ -58,6 +69,7 @@ export function NewRequestForm() {
           description: values.description.trim(),
           neededBy: new Date(values.neededBy).toISOString(),
           serviceTier: values.serviceTier,
+          loadSize: values.loadSize,
           pieces: values.pieces ? Number(values.pieces) : undefined,
           weightKg: values.weightKg ? Number(values.weightKg) : undefined,
         }),
@@ -138,6 +150,22 @@ export function NewRequestForm() {
             <option value="SCHEDULED">Scheduled</option>
           </Select>
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="loadSize">Load size</Label>
+        <Select
+          id="loadSize"
+          value={values.loadSize}
+          onChange={(e) => setValues((v) => ({ ...v, loadSize: e.target.value }))}
+        >
+          {LOAD_SIZE_OPTIONS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </Select>
+        <p className="mt-1 text-xs text-ink-muted">
+          Base rates under 10 km. 4-Hour Rush: +$20. Extra weight: $10/10 lbs over limit.
+        </p>
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">

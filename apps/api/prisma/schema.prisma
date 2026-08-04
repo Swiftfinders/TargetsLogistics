@@ -34,6 +34,12 @@ enum ServiceTier {
   SCHEDULED
 }
 
+enum LoadSize {
+  SMALL
+  MEDIUM
+  LARGE
+}
+
 enum RequestStatus {
   NEW
   ACKNOWLEDGED
@@ -132,6 +138,7 @@ model ShipmentRequest {
   description     String
   neededBy        DateTime      @map("needed_by") @db.Timestamptz(3)
   serviceTier     ServiceTier   @map("service_tier")
+  loadSize        LoadSize      @map("load_size")
   pieces          Int?
   weightKg        Float?        @map("weight_kg")
   status          RequestStatus @default(NEW)

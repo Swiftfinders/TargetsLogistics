@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/ui/table";
 import { publicEnv } from "@/lib/public-env";
-import { REQUEST_STATUS_LABELS, SERVICE_TIER_LABELS, formatNeededBy } from "@/lib/shipment-request-format";
+import { LOAD_SIZE_LABELS, REQUEST_STATUS_LABELS, SERVICE_TIER_LABELS, formatNeededBy } from "@/lib/shipment-request-format";
 import type { SessionUser } from "@/lib/use-session";
 
 interface ShipmentRequestRow {
@@ -18,6 +18,7 @@ interface ShipmentRequestRow {
   description: string;
   neededBy: string;
   serviceTier: string;
+  loadSize: string;
   status: string;
   createdAt: string;
 }
@@ -76,6 +77,7 @@ function RequestsList({ user }: { user: SessionUser }) {
                 <TableHeaderCell>Pickup</TableHeaderCell>
                 <TableHeaderCell>Dropoff</TableHeaderCell>
                 <TableHeaderCell>Service</TableHeaderCell>
+                <TableHeaderCell>Load size</TableHeaderCell>
                 <TableHeaderCell>Needed by</TableHeaderCell>
                 <TableHeaderCell>Status</TableHeaderCell>
               </TableRow>
@@ -86,6 +88,7 @@ function RequestsList({ user }: { user: SessionUser }) {
                   <TableCell>{item.pickupAddress}</TableCell>
                   <TableCell>{item.dropoffAddress}</TableCell>
                   <TableCell>{SERVICE_TIER_LABELS[item.serviceTier] ?? item.serviceTier}</TableCell>
+                  <TableCell>{LOAD_SIZE_LABELS[item.loadSize] ?? item.loadSize}</TableCell>
                   <TableCell>{formatNeededBy(item.neededBy)}</TableCell>
                   <TableCell>
                     <Badge tone={statusTone(item.status)}>{REQUEST_STATUS_LABELS[item.status] ?? item.status}</Badge>

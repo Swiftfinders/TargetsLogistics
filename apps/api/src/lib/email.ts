@@ -68,6 +68,49 @@ export async function sendSignupNotification(signup: { name: string; email: stri
   }
 }
 
+export async function sendShipmentRequestNotification(request: {
+  pickupAddress: string;
+  dropoffAddress: string;
+  description: string;
+  neededBy: Date;
+  serviceTier: string;
+  loadSize: string;
+  pieces?: number | null;
+  weightKg?: number | null;
+  accountName: string;
+  submittedBy: string;
+}): Promise<void> {
+  if (!resend) {
+    logger.warn("RESEND_API_KEY not set — skipping shipment request notification email");
+    return;
+  }
+
+  const lines = [
+    `Account: ${request.accountName}`,
+    `Submitted by: ${request.submittedBy}`,
+    "",
+    `Pickup: ${request.pickupAddress}`,
+    `Dropoff: ${request.dropoffAddress}`,
+    `Description: ${request.description}`,
+    `Service tier: ${request.serviceTier}`,
+    `Load size: ${request.loadSize}`,
+    `Needed by: ${request.neededBy.toLocaleString("en-CA")}`,
+    request.pieces != null ? `Pieces: ${request.pieces}` : null,
+    request.weightKg != null ? `Weight: ${request.weightKg} kg` : null,
+  ].filter((line): line is string => line !== null);
+
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: CONTACT_NOTIFICATION_EMAIL,
+      subject: `New shipment request from ${request.accountName}`,
+      text: lines.join("\n"),
+    });
+  } catch (error) {
+    logger.error({ err: error }, "failed to send shipment request notification email");
+  }
+}
+
 export async function sendPasswordSetupEmail(params: {
   to: string;
   name: string;

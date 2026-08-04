@@ -1,6 +1,7 @@
 import type { FastifyInstance } from "fastify";
-import { createShipmentRequestInputSchema } from "@targets/shared";
+import { createShipmentRequestInputSchema, LOAD_SIZE_DETAILS, type LoadSize } from "@targets/shared";
 import { prisma } from "../../lib/db.js";
+import { sendShipmentRequestNotification } from "../../lib/email.js";
 import { requireClient } from "../../lib/auth-middleware.js";
 
 const DEFAULT_LIMIT = 20;
@@ -39,6 +40,7 @@ export async function portalRoutes(app: FastifyInstance) {
       return reply.code(400).send({ error: "invalid_input", issues: parsed.error.flatten().fieldErrors });
     }
 
+    const neededBy = new Date(parsed.data.neededBy);
     const created = await prisma.shipmentRequest.create({
       data: {
         accountId,
@@ -46,12 +48,28 @@ export async function portalRoutes(app: FastifyInstance) {
         pickupAddress: parsed.data.pickupAddress,
         dropoffAddress: parsed.data.dropoffAddress,
         description: parsed.data.description,
-        neededBy: new Date(parsed.data.neededBy),
+        neededBy,
         serviceTier: parsed.data.serviceTier,
+        loadSize: parsed.data.loadSize,
         pieces: parsed.data.pieces ?? null,
         weightKg: parsed.data.weightKg ?? null,
       },
     });
+
+    const account = await prisma.account.findUnique({ where: { id: accountId }, select: { name: true } });
+    const loadDetails = LOAD_SIZE_DETAILS[parsed.data.loadSize as LoadSize];
+    sendShipmentRequestNotification({
+      pickupAddress: parsed.data.pickupAddress,
+      dropoffAddress: parsed.data.dropoffAddress,
+      description: parsed.data.description,
+      neededBy,
+      serviceTier: parsed.data.serviceTier,
+      loadSize: `${loadDetails.label} — ${loadDetails.vehicle} · ${loadDetails.weightLimit}`,
+      pieces: parsed.data.pieces ?? null,
+      weightKg: parsed.data.weightKg ?? null,
+      accountName: account?.name ?? "Unknown",
+      submittedBy: request.authUser!.email,
+    }).catch(() => {});
 
     return reply.code(201).send(created);
   });

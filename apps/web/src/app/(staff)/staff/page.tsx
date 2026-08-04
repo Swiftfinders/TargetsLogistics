@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } fro
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { publicEnv } from "@/lib/public-env";
-import { REQUEST_STATUS_LABELS, SERVICE_TIER_LABELS, formatNeededBy } from "@/lib/shipment-request-format";
+import { LOAD_SIZE_LABELS, REQUEST_STATUS_LABELS, SERVICE_TIER_LABELS, formatNeededBy } from "@/lib/shipment-request-format";
 import type { SessionUser } from "@/lib/use-session";
 
 /* ------------------------------------------------------------------ */
@@ -36,6 +36,7 @@ interface ShipmentRequestRow {
   description: string;
   neededBy: string;
   serviceTier: string;
+  loadSize: string;
   status: string;
   pieces: number | null;
   weightKg: number | null;
@@ -211,6 +212,7 @@ function RequestsTab() {
           <TableHeaderCell>Pickup</TableHeaderCell>
           <TableHeaderCell>Dropoff</TableHeaderCell>
           <TableHeaderCell>Service</TableHeaderCell>
+          <TableHeaderCell>Load size</TableHeaderCell>
           <TableHeaderCell>Needed by</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
         </TableRow>
@@ -222,6 +224,7 @@ function RequestsTab() {
             <TableCell>{item.pickupAddress}</TableCell>
             <TableCell>{item.dropoffAddress}</TableCell>
             <TableCell>{SERVICE_TIER_LABELS[item.serviceTier] ?? item.serviceTier}</TableCell>
+            <TableCell>{LOAD_SIZE_LABELS[item.loadSize] ?? item.loadSize}</TableCell>
             <TableCell>{formatNeededBy(item.neededBy)}</TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
