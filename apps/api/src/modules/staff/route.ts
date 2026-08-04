@@ -136,20 +136,18 @@ export async function staffRoutes(app: FastifyInstance) {
     if (!existing || existing.status !== "PENDING") return reply.code(404).send({ error: "not_found" });
 
     const updated = await prisma.$transaction(async (tx) => {
-      const result = await tx.user.update({ where: { id }, data: { status: "INVITED" } });
+      const result = await tx.user.update({ where: { id }, data: { status: "ACTIVE" } });
       await writeAuditLog({
         actorId: request.authUser!.id,
         action: "signup.approved",
         entityType: "user",
         entityId: id,
         before: { status: existing.status },
-        after: { status: "INVITED" },
+        after: { status: "ACTIVE" },
         ip: request.ip,
       });
       return result;
     });
-
-    await issuePasswordSetupToken(updated.id, "invite");
 
     return reply.send({ id: updated.id, status: updated.status });
   });

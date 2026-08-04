@@ -6,19 +6,23 @@ import { Button } from "@/components/ui/button";
 import { FieldError, Input, Label } from "@/components/ui/input";
 import { publicEnv } from "@/lib/public-env";
 
-const initialValues = { name: "", email: "", company: "" };
+type Fields = "name" | "email" | "company" | "password" | "confirmPassword";
+
+const initialValues = { name: "", email: "", company: "", password: "", confirmPassword: "" };
 
 function validate(values: typeof initialValues) {
-  const errors: Partial<Record<keyof typeof initialValues, string>> = {};
+  const errors: Partial<Record<Fields, string>> = {};
   if (!values.name.trim()) errors.name = "Enter your name";
   if (!values.email.trim()) errors.email = "Enter your email";
   if (!values.company.trim()) errors.company = "Enter your company name";
+  if (values.password.length < 10) errors.password = "Use at least 10 characters";
+  if (values.confirmPassword !== values.password) errors.confirmPassword = "Passwords don't match";
   return errors;
 }
 
 export function SignupForm() {
   const [values, setValues] = useState(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof typeof initialValues, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<Fields, string>>>({});
   const [status, setStatus] = useState<"idle" | "submitting" | "done">("idle");
   const [submitError, setSubmitError] = useState<string | undefined>();
 
@@ -43,6 +47,7 @@ export function SignupForm() {
           name: values.name.trim(),
           email: values.email.trim(),
           company: values.company.trim(),
+          password: values.password,
         }),
       });
 
@@ -63,7 +68,7 @@ export function SignupForm() {
   if (status === "done") {
     return (
       <div className="rounded-xl border border-confirm/40 bg-confirm/10 p-4 text-sm text-ink">
-        Thanks — we&apos;ve received your request. Our team will review it and email you a link to set your password
+        Thanks — we&apos;ve received your request. Our team will review it and you&apos;ll be able to sign in
         once it&apos;s approved.
       </div>
     );
@@ -105,6 +110,32 @@ export function SignupForm() {
           aria-describedby={errors.email ? "email-error" : undefined}
         />
         <FieldError id="email-error">{errors.email}</FieldError>
+      </div>
+      <div>
+        <Label htmlFor="password">Password</Label>
+        <Input
+          id="password"
+          type="password"
+          autoComplete="new-password"
+          value={values.password}
+          onChange={(e) => setValues((v) => ({ ...v, password: e.target.value }))}
+          aria-invalid={Boolean(errors.password)}
+          aria-describedby={errors.password ? "password-error" : undefined}
+        />
+        <FieldError id="password-error">{errors.password}</FieldError>
+      </div>
+      <div>
+        <Label htmlFor="confirmPassword">Confirm password</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          value={values.confirmPassword}
+          onChange={(e) => setValues((v) => ({ ...v, confirmPassword: e.target.value }))}
+          aria-invalid={Boolean(errors.confirmPassword)}
+          aria-describedby={errors.confirmPassword ? "confirmPassword-error" : undefined}
+        />
+        <FieldError id="confirmPassword-error">{errors.confirmPassword}</FieldError>
       </div>
 
       {submitError && <p className="text-sm font-medium text-accent">{submitError}</p>}
