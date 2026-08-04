@@ -120,6 +120,20 @@ Sets the user's status to `SUSPENDED` (keeps the record for reference rather
 than deleting it) and writes an audit log entry. `404` if the user doesn't
 exist or isn't `PENDING`.
 
+### `GET /staff/analytics`
+Dashboard summary. Returns counts: `totalClients`, `pendingSignups`,
+`newRequests`, `totalRequests`, `acknowledgedRequests`, `closedRequests`,
+`totalContacts`, `totalClientUsers`. All integers.
+
+### `GET /staff/clients`
+Cursor-paginated list of client `Account` records, newest first. Each item
+includes its `users` (client users only: id, name, email, status) and
+`_count.shipmentRequests`. `{ items, nextCursor }`.
+
+### `GET /staff/contacts`
+Cursor-paginated list of `ContactSubmission` records (public form entries),
+newest first. `{ items, nextCursor }`.
+
 ## What's deliberately not here yet
 
 No order/waybill/tracking model, no rate cards, no invoicing, no drivers —

@@ -8,6 +8,22 @@ const SEED_PASSWORD = "seed-password-change-me";
 async function main() {
   const passwordHash = await argon2.hash(SEED_PASSWORD, { type: argon2.argon2id });
 
+  // Production staff account — always upsert so re-running seed resets the password
+  const staffPassword = process.env.STAFF_PASSWORD || "@targetslogistics";
+  const staffPasswordHash = await argon2.hash(staffPassword, { type: argon2.argon2id });
+  await prisma.user.upsert({
+    where: { email: "kr2011@live.ca" },
+    update: { passwordHash: staffPasswordHash },
+    create: {
+      email: "kr2011@live.ca",
+      name: "Admin",
+      passwordHash: staffPasswordHash,
+      userType: "STAFF",
+      status: "ACTIVE",
+    },
+  });
+
+  // Dev/test staff accounts
   await prisma.user.upsert({
     where: { email: "admin@targetslogistics.test" },
     update: {},

@@ -175,4 +175,82 @@ export async function staffRoutes(app: FastifyInstance) {
 
     return reply.send({ id: updated.id, status: updated.status });
   });
+
+  app.get("/staff/analytics", { preHandler: requireStaff }, async (_request, reply) => {
+    const [
+      totalClients,
+      pendingSignups,
+      newRequests,
+      totalRequests,
+      acknowledgedRequests,
+      closedRequests,
+      totalContacts,
+      totalClientUsers,
+    ] = await Promise.all([
+      prisma.account.count(),
+      prisma.user.count({ where: { userType: "CLIENT", status: "PENDING" } }),
+      prisma.shipmentRequest.count({ where: { status: "NEW" } }),
+      prisma.shipmentRequest.count(),
+      prisma.shipmentRequest.count({ where: { status: "ACKNOWLEDGED" } }),
+      prisma.shipmentRequest.count({ where: { status: "CLOSED" } }),
+      prisma.contactSubmission.count(),
+      prisma.user.count({ where: { userType: "CLIENT" } }),
+    ]);
+
+    return reply.send({
+      totalClients,
+      pendingSignups,
+      newRequests,
+      totalRequests,
+      acknowledgedRequests,
+      closedRequests,
+      totalContacts,
+      totalClientUsers,
+    });
+  });
+
+  app.get("/staff/clients", { preHandler: requireStaff }, async (request, reply) => {
+    const query = request.query as { cursor?: string; limit?: string };
+    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+
+    const accounts = await prisma.account.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      include: {
+        users: {
+          where: { userType: "CLIENT" },
+          select: { id: true, name: true, email: true, status: true },
+        },
+        _count: { select: { shipmentRequests: true } },
+      },
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = accounts.length > limit;
+    const page = hasMore ? accounts.slice(0, limit) : accounts;
+
+    return reply.send({
+      items: page,
+      nextCursor: hasMore ? page[page.length - 1]?.id : null,
+    });
+  });
+
+  app.get("/staff/contacts", { preHandler: requireStaff }, async (request, reply) => {
+    const query = request.query as { cursor?: string; limit?: string };
+    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+
+    const items = await prisma.contactSubmission.findMany({
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = items.length > limit;
+    const page = hasMore ? items.slice(0, limit) : items;
+
+    return reply.send({
+      items: page,
+      nextCursor: hasMore ? page[page.length - 1]?.id : null,
+    });
+  });
 }
