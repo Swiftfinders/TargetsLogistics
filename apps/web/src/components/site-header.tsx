@@ -9,6 +9,14 @@ import { marketingNav } from "@/lib/site";
 import { buttonClasses } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
 
+function ClientLoginLink({ className, onClick = () => {} }: { className?: string; onClick?: () => void }) {
+  return (
+    <Link href="/portal/login" prefetch={false} onClick={onClick} className={className}>
+      Client login
+    </Link>
+  );
+}
+
 function Wordmark() {
   return (
     <Link href="/" prefetch={false} aria-label="Targets Logistics, home">
@@ -58,7 +66,8 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden items-center gap-2 md:flex">
+          <ClientLoginLink className={buttonClasses("outline", "sm")} />
           <Link href="/contact" prefetch={false} className={buttonClasses("primary", "sm")}>
             Book a pickup
           </Link>
@@ -103,14 +112,20 @@ export function SiteHeader() {
                   <NavLink key={item.href} href={item.href} label={item.label} onNavigate={() => setOpen(false)} />
                 ))}
               </nav>
-              <Link
-                href="/contact"
-                prefetch={false}
-                onClick={() => setOpen(false)}
-                className={buttonClasses("primary", "md", "mt-4 w-full")}
-              >
-                Book a pickup
-              </Link>
+              <div className="mt-4 flex flex-col gap-2">
+                <ClientLoginLink
+                  className={buttonClasses("outline", "md", "w-full")}
+                  onClick={() => setOpen(false)}
+                />
+                <Link
+                  href="/contact"
+                  prefetch={false}
+                  onClick={() => setOpen(false)}
+                  className={buttonClasses("primary", "md", "w-full")}
+                >
+                  Book a pickup
+                </Link>
+              </div>
             </DialogPrimitive.Content>
           </DialogPrimitive.Portal>
         </DialogPrimitive.Root>

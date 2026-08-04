@@ -25,6 +25,18 @@ export function SiteFooter() {
             </Link>
           ))}
         </nav>
+        <nav aria-label="Account" className="flex flex-col gap-2 text-sm">
+          <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Account</span>
+          <Link href="/portal/signup" prefetch={false} className="text-ink-muted hover:text-ink hover:underline">
+            Client sign up
+          </Link>
+          <Link href="/portal/login" prefetch={false} className="text-ink-muted hover:text-ink hover:underline">
+            Client login
+          </Link>
+          <Link href="/staff/login" prefetch={false} className="text-ink-muted hover:text-ink hover:underline">
+            Staff login
+          </Link>
+        </nav>
       </div>
       <div className="border-t border-line px-5 py-4 text-xs text-ink-muted">
         © {new Date().getFullYear()} {siteConfig.name}. All rights reserved.
