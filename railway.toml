@@ -11,8 +11,8 @@ restartPolicyMaxRetries = 3
 # Run migrations as the release command, never in the build step — Railway builds
 # can run more than once and concurrently, and a build-step migration can race.
 releaseCommand = "node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma"
-# Defense in depth: the table `public.user` was found missing in production even
-# with releaseCommand configured (its phase apparently isn't creating tables on
-# this service) — running migrate deploy again here is a safe no-op once the
-# schema is caught up, but guarantees migrations land before traffic either way.
-startCommand = "node_modules/.bin/prisma migrate deploy --schema=./prisma/schema.prisma && node dist/server.js"
+# Railway's startCommand replaces Docker CMD but NOT ENTRYPOINT — a compound
+# shell command (&&) here was silently swallowed by exec-form ENTRYPOINT parsing,
+# causing prisma to run but node to never start.  Migrations are handled by
+# releaseCommand above; startCommand only needs to start the server.
+startCommand = "node dist/server.js"
