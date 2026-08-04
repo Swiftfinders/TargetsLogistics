@@ -1,9 +1,16 @@
 import { buildApp } from "./app.js";
+import { bootstrapAdmin } from "./lib/bootstrap.js";
 import { env } from "./lib/env.js";
 import { logger } from "./lib/logger.js";
 
 async function main() {
   const app = await buildApp();
+
+  try {
+    await bootstrapAdmin();
+  } catch (err) {
+    logger.warn(err, "bootstrap: could not ensure admin account (non-fatal)");
+  }
 
   try {
     await app.listen({ port: env.PORT, host: "0.0.0.0" });

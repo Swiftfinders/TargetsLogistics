@@ -16,8 +16,15 @@ export async function buildApp() {
   const app = Fastify({ loggerInstance: logger });
 
   await app.register(helmet);
+  const corsOrigins = [...env.CORS_ORIGINS];
+  try {
+    const webOrigin = new URL(env.WEB_URL).origin;
+    if (!corsOrigins.includes(webOrigin)) corsOrigins.push(webOrigin);
+  } catch { /* WEB_URL not a valid URL — skip */ }
+  if (!corsOrigins.includes("http://localhost:3000")) corsOrigins.push("http://localhost:3000");
+
   await app.register(cors, {
-    origin: env.CORS_ORIGINS,
+    origin: corsOrigins,
     credentials: true,
   });
   await app.register(rateLimit, {

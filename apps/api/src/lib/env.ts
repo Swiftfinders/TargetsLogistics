@@ -6,8 +6,9 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url(),
   CORS_ORIGINS: z
     .string()
-    .min(1, "CORS_ORIGINS must be a comma-separated list of allowed origins")
-    .transform((value) => value.split(",").map((origin) => origin.trim())),
+    .optional()
+    .default("")
+    .transform((value) => (value ? value.split(",").map((origin) => origin.trim()) : [])),
   APP_VERSION: z.string().default("0.0.0"),
   // Optional so the API keeps booting (health checks, everything else) before
   // this is configured on Railway. The contact route logs a clear warning and
@@ -19,7 +20,11 @@ const envSchema = z.object({
   // production until this is set to ".yourdomain.com".
   COOKIE_DOMAIN: z.string().optional(),
   // Base URL of apps/web, used to build links in emails (password reset, etc).
-  WEB_URL: z.string().url().default("http://localhost:3000"),
+  WEB_URL: z.string().url().default(
+    process.env.NODE_ENV === "production"
+      ? "https://targets-logistics-web.vercel.app"
+      : "http://localhost:3000"
+  ),
 });
 
 export type Env = z.infer<typeof envSchema>;
