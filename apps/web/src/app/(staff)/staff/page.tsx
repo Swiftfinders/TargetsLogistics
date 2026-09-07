@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } fro
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { publicEnv } from "@/lib/public-env";
-import { REQUEST_STATUS_LABELS } from "@/lib/shipment-request-format";
+import { REQUEST_STATUS_LABELS } from "@/lib/order-format";
 import type { SessionUser } from "@/lib/use-session";
 
 /* ------------------------------------------------------------------ */

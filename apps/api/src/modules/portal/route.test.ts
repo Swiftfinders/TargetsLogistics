@@ -7,6 +7,13 @@ const PASSWORD = "correct-horse-battery-staple";
 const cleanupAccountIds: string[] = [];
 const cleanupUserIds: string[] = [];
 
+const validOrder = {
+  pickupAddress: "1 Main St, Kitchener, ON",
+  deliveryAddress: "2 King St, Waterloo, ON",
+  serviceLevel: "SAME_DAY",
+  vehicleType: "CAR",
+};
+
 async function createClient(accountName: string) {
   const account = await prisma.account.create({ data: { name: accountName } });
   const passwordHash = await argon2.hash(PASSWORD, { type: argon2.argon2id });
@@ -34,40 +41,37 @@ async function loginAs(app: Awaited<ReturnType<typeof buildApp>>, email: string)
 afterEach(async () => {
   if (cleanupUserIds.length > 0) {
     await prisma.session.deleteMany({ where: { userId: { in: cleanupUserIds } } });
-    await prisma.shipmentRequest.deleteMany({ where: { createdByUserId: { in: cleanupUserIds } } });
+    await prisma.order.deleteMany({ where: { createdByUserId: { in: cleanupUserIds } } });
     await prisma.user.deleteMany({ where: { id: { in: cleanupUserIds } } });
   }
   if (cleanupAccountIds.length > 0) {
+    await prisma.order.deleteMany({ where: { accountId: { in: cleanupAccountIds } } });
     await prisma.account.deleteMany({ where: { id: { in: cleanupAccountIds } } });
   }
   cleanupUserIds.length = 0;
   cleanupAccountIds.length = 0;
 });
 
-describe("client portal shipment requests", () => {
-  it("lets a client create and read back their own request", async () => {
+describe("client portal orders", () => {
+  it("lets a client create and read back their own order with a priced estimate", async () => {
     const app = await buildApp();
     const { user } = await createClient("Portal Test Co A");
     const sessionCookie = await loginAs(app, user.email);
 
     const createResponse = await app.inject({
       method: "POST",
-      url: "/portal/requests",
+      url: "/portal/orders",
       cookies: { tl_client_session: sessionCookie },
-      payload: {
-        pickupAddress: "1 Main St, Kitchener, ON",
-        dropoffAddress: "2 King St, Waterloo, ON",
-        description: "A test parcel",
-        neededBy: new Date(Date.now() + 3600_000).toISOString(),
-        serviceTier: "SAME_DAY",
-        loadSize: "SMALL",
-      },
+      payload: validOrder,
     });
     expect(createResponse.statusCode).toBe(201);
+    // Car base rate is $25.00 → 2500 cents.
+    expect(createResponse.json().estimatedPriceCents).toBe(2500);
+    expect(createResponse.json().reference).toMatch(/^TL-\d{6}-\d{3}$/);
 
     const listResponse = await app.inject({
       method: "GET",
-      url: "/portal/requests",
+      url: "/portal/orders",
       cookies: { tl_client_session: sessionCookie },
     });
     expect(listResponse.statusCode).toBe(200);
@@ -76,7 +80,7 @@ describe("client portal shipment requests", () => {
     await app.close();
   });
 
-  it("returns 404, not 403, when a client requests another account's shipment request", async () => {
+  it("returns 404, not 403, when a client requests another account's order", async () => {
     const app = await buildApp();
     const clientA = await createClient("Portal Test Co A");
     const clientB = await createClient("Portal Test Co B");
@@ -86,29 +90,22 @@ describe("client portal shipment requests", () => {
 
     const createResponse = await app.inject({
       method: "POST",
-      url: "/portal/requests",
+      url: "/portal/orders",
       cookies: { tl_client_session: sessionA },
-      payload: {
-        pickupAddress: "1 Main St, Kitchener, ON",
-        dropoffAddress: "2 King St, Waterloo, ON",
-        description: "Belongs to account A only",
-        neededBy: new Date(Date.now() + 3600_000).toISOString(),
-        serviceTier: "RUSH",
-        loadSize: "MEDIUM",
-      },
+      payload: validOrder,
     });
-    const requestId = createResponse.json().id;
+    const orderId = createResponse.json().id;
 
     const crossAccountResponse = await app.inject({
       method: "GET",
-      url: `/portal/requests/${requestId}`,
+      url: `/portal/orders/${orderId}`,
       cookies: { tl_client_session: sessionB },
     });
     expect(crossAccountResponse.statusCode).toBe(404);
 
     const ownerResponse = await app.inject({
       method: "GET",
-      url: `/portal/requests/${requestId}`,
+      url: `/portal/orders/${orderId}`,
       cookies: { tl_client_session: sessionA },
     });
     expect(ownerResponse.statusCode).toBe(200);
@@ -118,30 +115,41 @@ describe("client portal shipment requests", () => {
 
   it("rejects an unauthenticated request", async () => {
     const app = await buildApp();
-    const response = await app.inject({ method: "GET", url: "/portal/requests" });
+    const response = await app.inject({ method: "GET", url: "/portal/orders" });
     expect(response.statusCode).toBe(401);
     await app.close();
   });
 });
 
-describe("staff visibility across accounts", () => {
-  it("lets staff see shipment requests from every account", async () => {
+describe("public and staff order visibility", () => {
+  it("accepts a public order with no account", async () => {
+    const app = await buildApp();
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/orders",
+      payload: { ...validOrder, pickupCompany: "Walk-in Co" },
+    });
+    expect(response.statusCode).toBe(201);
+    const orderId = response.json().id;
+
+    const stored = await prisma.order.findUniqueOrThrow({ where: { id: orderId } });
+    expect(stored.accountId).toBeNull();
+    await prisma.order.delete({ where: { id: orderId } });
+
+    await app.close();
+  });
+
+  it("lets staff see orders from every account", async () => {
     const app = await buildApp();
     const { account, user } = await createClient("Portal Test Co Staff View");
     const clientSession = await loginAs(app, user.email);
 
     await app.inject({
       method: "POST",
-      url: "/portal/requests",
+      url: "/portal/orders",
       cookies: { tl_client_session: clientSession },
-      payload: {
-        pickupAddress: "1 Main St, Kitchener, ON",
-        dropoffAddress: "2 King St, Waterloo, ON",
-        description: "Staff should see this",
-        neededBy: new Date(Date.now() + 3600_000).toISOString(),
-        serviceTier: "OVERNIGHT",
-        loadSize: "LARGE",
-      },
+      payload: validOrder,
     });
 
     const passwordHash = await argon2.hash(PASSWORD, { type: argon2.argon2id });
@@ -161,11 +169,11 @@ describe("staff visibility across accounts", () => {
 
     const listResponse = await app.inject({
       method: "GET",
-      url: "/staff/requests",
+      url: "/staff/orders",
       cookies: { tl_staff_session: staffCookie },
     });
     expect(listResponse.statusCode).toBe(200);
-    const found = listResponse.json().items.find((item: { accountId: string }) => item.accountId === account.id);
+    const found = listResponse.json().items.find((item: { accountId: string | null }) => item.accountId === account.id);
     expect(found).toBeDefined();
 
     await app.close();

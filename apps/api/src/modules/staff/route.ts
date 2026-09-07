@@ -1,11 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import {
-  createClientInputSchema,
-  requestStatusSchema,
-  updateShipmentRequestStatusInputSchema,
-  orderStatusSchema,
-  updateOrderStatusInputSchema,
-} from "@targets/shared";
+import { createClientInputSchema, orderStatusSchema, updateOrderStatusInputSchema } from "@targets/shared";
 import { prisma } from "../../lib/db.js";
 import { requireStaff } from "../../lib/auth-middleware.js";
 import { writeAuditLog } from "../../lib/audit.js";
@@ -20,60 +14,6 @@ const MAX_LIMIT = 100;
 const UNUSABLE_PLACEHOLDER_PASSWORD = "invited-account-must-set-password-via-emailed-link";
 
 export async function staffRoutes(app: FastifyInstance) {
-  app.get("/staff/requests", { preHandler: requireStaff }, async (request, reply) => {
-    const query = request.query as { cursor?: string; limit?: string; status?: string };
-    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
-    const statusFilter = requestStatusSchema.safeParse(query.status);
-
-    const items = await prisma.shipmentRequest.findMany({
-      ...(statusFilter.success ? { where: { status: statusFilter.data } } : {}),
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      take: limit + 1,
-      include: { account: { select: { name: true } } },
-      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
-    });
-
-    const hasMore = items.length > limit;
-    const page = hasMore ? items.slice(0, limit) : items;
-
-    return reply.send({ items: page, nextCursor: hasMore ? page[page.length - 1]?.id : null });
-  });
-
-  app.get("/staff/requests/:id", { preHandler: requireStaff }, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const item = await prisma.shipmentRequest.findUnique({
-      where: { id },
-      include: { account: { select: { name: true } }, createdBy: { select: { name: true, email: true } } },
-    });
-    if (!item) return reply.code(404).send({ error: "not_found" });
-    return reply.send(item);
-  });
-
-  app.patch("/staff/requests/:id/status", { preHandler: requireStaff }, async (request, reply) => {
-    const { id } = request.params as { id: string };
-    const parsed = updateShipmentRequestStatusInputSchema.safeParse(request.body);
-    if (!parsed.success) return reply.code(400).send({ error: "invalid_input" });
-
-    const existing = await prisma.shipmentRequest.findUnique({ where: { id } });
-    if (!existing) return reply.code(404).send({ error: "not_found" });
-
-    const updated = await prisma.$transaction(async (tx) => {
-      const result = await tx.shipmentRequest.update({ where: { id }, data: { status: parsed.data.status } });
-      await writeAuditLog({
-        actorId: request.authUser!.id,
-        action: "shipment_request.status_updated",
-        entityType: "shipment_request",
-        entityId: id,
-        before: { status: existing.status },
-        after: { status: parsed.data.status },
-        ip: request.ip,
-      });
-      return result;
-    });
-
-    return reply.send(updated);
-  });
-
   app.get("/staff/orders", { preHandler: requireStaff }, async (request, reply) => {
     const query = request.query as { cursor?: string; limit?: string; status?: string };
     const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
@@ -273,25 +213,6 @@ export async function staffRoutes(app: FastifyInstance) {
 
     const hasMore = accounts.length > limit;
     const page = hasMore ? accounts.slice(0, limit) : accounts;
-
-    return reply.send({
-      items: page,
-      nextCursor: hasMore ? page[page.length - 1]?.id : null,
-    });
-  });
-
-  app.get("/staff/contacts", { preHandler: requireStaff }, async (request, reply) => {
-    const query = request.query as { cursor?: string; limit?: string };
-    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
-
-    const items = await prisma.contactSubmission.findMany({
-      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
-      take: limit + 1,
-      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
-    });
-
-    const hasMore = items.length > limit;
-    const page = hasMore ? items.slice(0, limit) : items;
 
     return reply.send({
       items: page,

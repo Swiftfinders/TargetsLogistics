@@ -1,10 +1,10 @@
 import type { UserType } from "./auth.js";
 
 export type Action =
-  | "shipmentRequest:create"
-  | "shipmentRequest:readOwn"
-  | "shipmentRequest:readAny"
-  | "shipmentRequest:updateStatus"
+  | "order:create"
+  | "order:readOwn"
+  | "order:readAny"
+  | "order:updateStatus"
   | "client:create"
   | "signup:review";
 
@@ -20,13 +20,13 @@ export interface Actor {
 export function can(actor: Actor, action: Action): boolean {
   if (actor.userType === "STAFF") {
     return (
-      action === "shipmentRequest:readAny" ||
-      action === "shipmentRequest:updateStatus" ||
+      action === "order:readAny" ||
+      action === "order:updateStatus" ||
       action === "client:create" ||
       action === "signup:review"
     );
   }
 
   // CLIENT
-  return action === "shipmentRequest:create" || action === "shipmentRequest:readOwn";
+  return action === "order:create" || action === "order:readOwn";
 }

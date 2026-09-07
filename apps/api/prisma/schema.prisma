@@ -27,19 +27,6 @@ enum AccountStatus {
   SUSPENDED
 }
 
-enum ServiceTier {
-  SAME_DAY
-  RUSH
-  OVERNIGHT
-  SCHEDULED
-}
-
-enum LoadSize {
-  SMALL
-  MEDIUM
-  LARGE
-}
-
 enum RequestStatus {
   NEW
   ACKNOWLEDGED
@@ -77,9 +64,8 @@ model Account {
   createdAt DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  users            User[]
-  shipmentRequests ShipmentRequest[]
-  orders           Order[]
+  users  User[]
+  orders Order[]
 
   @@map("account")
 }
@@ -102,12 +88,11 @@ model User {
   createdAt           DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime   @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  account                 Account?             @relation(fields: [accountId], references: [id])
-  sessions                Session[]
-  passwordResetTokens     PasswordResetToken[]
-  shipmentRequestsCreated ShipmentRequest[]    @relation("ShipmentRequestCreatedBy")
-  ordersCreated           Order[]              @relation("OrderCreatedBy")
-  auditLogs               AuditLog[]
+  account             Account?             @relation(fields: [accountId], references: [id])
+  sessions            Session[]
+  passwordResetTokens PasswordResetToken[]
+  ordersCreated       Order[]              @relation("OrderCreatedBy")
+  auditLogs           AuditLog[]
 
   @@index([accountId])
   @@map("user")
@@ -148,34 +133,6 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_token")
-}
-
-// A client's structured shipment request, submitted through the portal.
-// Deliberately not a full order/waybill/tracking model yet — see
-// docs/DECISIONS.md for what's deferred and why.
-model ShipmentRequest {
-  id              String        @id @default(uuid())
-  accountId       String        @map("account_id")
-  createdByUserId String        @map("created_by_user_id")
-  pickupAddress   String        @map("pickup_address")
-  dropoffAddress  String        @map("dropoff_address")
-  description     String
-  neededBy        DateTime      @map("needed_by") @db.Timestamptz(3)
-  serviceTier     ServiceTier   @map("service_tier")
-  loadSize        LoadSize      @map("load_size")
-  pieces          Int?
-  weightKg        Float?        @map("weight_kg")
-  status          RequestStatus @default(NEW)
-  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
-
-  account   Account @relation(fields: [accountId], references: [id])
-  createdBy User    @relation("ShipmentRequestCreatedBy", fields: [createdByUserId], references: [id])
-
-  @@index([accountId, createdAt])
-  @@index([status])
-  @@index([createdAt])
-  @@map("shipment_request")
 }
 
 // A delivery order submitted through the public site (no account) or by a
@@ -242,20 +199,4 @@ model AuditLog {
 
   @@index([entityType, entityId])
   @@map("audit_log")
-}
-
-// Public marketing contact form submissions. No auth/account scope — this is an
-// anonymous lead form, unlike every other mutation in this schema.
-model ContactSubmission {
-  id        String   @id @default(uuid())
-  name      String
-  email     String
-  phone     String?
-  company   String?
-  loadSize  LoadSize @map("load_size")
-  message   String
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@index([createdAt])
-  @@map("contact_submission")
 }

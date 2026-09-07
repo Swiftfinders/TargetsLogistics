@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "@/components/ui/table";
 import { publicEnv } from "@/lib/public-env";
-import { REQUEST_STATUS_LABELS } from "@/lib/shipment-request-format";
+import { REQUEST_STATUS_LABELS } from "@/lib/order-format";
 import type { SessionUser } from "@/lib/use-session";
 
 interface OrderRow {
