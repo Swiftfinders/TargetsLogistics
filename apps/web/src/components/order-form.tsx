@@ -18,10 +18,12 @@ import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { publicEnv } from "@/lib/public-env";
 
-/* Brand colours from the Target Logistic rate card (navy + red), kept local to
-   this form so it matches the printed collateral rather than the site accent. */
-const NAVY = "#16294f";
-const RED = "#c1122e";
+/* Brand tokens — navy ink, gold highlights, purple CTA, warm accent for the
+   required markers — so the order form reads as the same brand as the site. */
+const NAVY = "var(--color-ink)";
+const GOLD = "var(--color-gold)";
+const ACCENT = "var(--color-accent)";
+const PURPLE = "var(--color-primary)";
 
 const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -86,7 +88,7 @@ function SectionHeader({ num, title }: { num: string; title: string }) {
   return (
     <div className="mb-5 border-b-2 pb-2" style={{ borderColor: NAVY }}>
       <h2 className="text-lg font-extrabold tracking-tight" style={{ color: NAVY }}>
-        <span className="mr-2 font-mono" style={{ color: RED }}>
+        <span className="mr-2 font-mono" style={{ color: GOLD }}>
           {num}
         </span>
         {title}
@@ -116,7 +118,7 @@ function PillGroup<T extends string>({
     <div role="group" aria-label={label}>
       <Label>
         {label}
-        {required && <span style={{ color: RED }}> *</span>}
+        {required && <span style={{ color: ACCENT }}> *</span>}
       </Label>
       <div className="flex flex-wrap gap-2">
         {options.map((opt) => {
@@ -257,7 +259,7 @@ export function OrderForm({ mode }: { mode: "public" | "client" }) {
         style={{ backgroundColor: NAVY }}
       >
         <span className="text-xs font-bold uppercase tracking-widest text-white/75">Order Reference</span>
-        <span className="font-mono text-sm font-bold" style={{ color: "#f2777c" }}>
+        <span className="font-mono text-sm font-bold" style={{ color: GOLD }}>
           {reference || "…"}
         </span>
       </div>
@@ -286,7 +288,7 @@ export function OrderForm({ mode }: { mode: "public" | "client" }) {
           </div>
           <div>
             <Label htmlFor="pickupAddress">
-              Pickup Address <span style={{ color: RED }}>*</span>
+              Pickup Address <span style={{ color: ACCENT }}>*</span>
             </Label>
             <Textarea
               id="pickupAddress"
@@ -335,7 +337,7 @@ export function OrderForm({ mode }: { mode: "public" | "client" }) {
           </div>
           <div>
             <Label htmlFor="deliveryAddress">
-              Delivery Address <span style={{ color: RED }}>*</span>
+              Delivery Address <span style={{ color: ACCENT }}>*</span>
             </Label>
             <Textarea
               id="deliveryAddress"
@@ -468,7 +470,7 @@ export function OrderForm({ mode }: { mode: "public" | "client" }) {
         type="submit"
         disabled={status === "submitting"}
         className="w-full rounded-full px-6 py-4 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-focus)"
-        style={{ backgroundColor: RED }}
+        style={{ backgroundColor: PURPLE }}
       >
         {status === "submitting" ? "Sending…" : "Send order to dispatch"}
       </button>

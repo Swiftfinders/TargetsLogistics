@@ -23,34 +23,28 @@ export default async function OpengraphImage() {
           style={{
             width: 96,
             height: 96,
-            borderRadius: 24,
-            background: "#3552ff",
+            borderRadius: "50%",
+            background: "#1c1b46",
+            border: "5px solid #f5a623",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            position: "relative",
           }}
         >
-          <div
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              border: "6px solid #ffffff",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#ff6b45" }} />
-          </div>
+          <div style={{ position: "absolute", width: 46, height: 13, borderRadius: 4, background: "#f5a623" }} />
+          <div style={{ position: "absolute", width: 13, height: 46, borderRadius: 4, background: "#6a54e6" }} />
         </div>
-        <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, textTransform: "uppercase", color: "#666b80", marginTop: 36 }}>
+        <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, textTransform: "uppercase", color: "#5c6088", marginTop: 36 }}>
           {siteConfig.cities.join(" · ")}
         </div>
-        <div style={{ display: "flex", fontSize: 68, fontWeight: 800, marginTop: 20, lineHeight: 1.1, maxWidth: 950, color: "#14161f" }}>
+        <div style={{ display: "flex", fontSize: 68, fontWeight: 800, marginTop: 20, lineHeight: 1.1, maxWidth: 950, color: "#191a3d" }}>
           {siteConfig.tagline}
         </div>
-        <div style={{ display: "flex", fontSize: 32, marginTop: 28, color: "#3552ff", fontWeight: 700 }}>{siteConfig.name}</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginTop: 28 }}>
+          <div style={{ display: "flex", fontSize: 32, color: "#5b46d9", fontWeight: 700 }}>{siteConfig.name}</div>
+          <div style={{ display: "flex", fontSize: 22, color: "#5c6088", fontWeight: 500 }}>{siteConfig.slogan}</div>
+        </div>
       </div>
     ),
     { ...size },

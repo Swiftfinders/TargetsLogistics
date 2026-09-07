@@ -15,7 +15,7 @@ const resend = env.RESEND_API_KEY ? new Resend(env.RESEND_API_KEY) : null;
 // No verified sending domain yet (CLAUDE.md: [DOMAIN] is still a placeholder).
 // Resend's shared address works without domain verification; swap for a real
 // address on our own domain once one exists.
-const FROM_ADDRESS = "Targets Logistics <onboarding@resend.dev>";
+const FROM_ADDRESS = "Target Logistics <onboarding@resend.dev>";
 
 export const CONTACT_NOTIFICATION_EMAIL = "kr2011@live.ca";
 
@@ -126,10 +126,10 @@ export async function sendPasswordSetupEmail(params: {
   }
 
   const link = `${env.WEB_URL}/reset-password?token=${encodeURIComponent(params.token)}`;
-  const subject = params.purpose === "invite" ? "Set up your Targets Logistics account" : "Reset your Targets Logistics password";
+  const subject = params.purpose === "invite" ? "Set up your Target Logistics account" : "Reset your Target Logistics password";
   const intro =
     params.purpose === "invite"
-      ? `Hi ${params.name}, an account has been set up for you at Targets Logistics.`
+      ? `Hi ${params.name}, an account has been set up for you at Target Logistics.`
       : `Hi ${params.name}, we received a request to reset your password.`;
 
   try {

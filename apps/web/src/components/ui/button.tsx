@@ -16,7 +16,7 @@ const base =
   "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-focus)";
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "bg-accent text-accent-ink shadow-[0_8px_20px_-8px_rgba(255,107,69,0.6)] hover:brightness-105",
+  primary: "bg-primary text-primary-ink shadow-[0_8px_20px_-8px_rgba(91,70,217,0.6)] hover:brightness-110",
   outline: "border border-line bg-bg text-ink hover:bg-bg-raised",
   ghost: "text-ink hover:bg-bg-raised",
 };

@@ -19,8 +19,8 @@ function ClientLoginLink({ className, onClick = () => {} }: { className?: string
 
 function Wordmark() {
   return (
-    <Link href="/" prefetch={false} aria-label="Targets Logistics, home">
-      <Logo />
+    <Link href="/" prefetch={false} aria-label="Target Logistics, home">
+      <Logo slogan />
     </Link>
   );
 }

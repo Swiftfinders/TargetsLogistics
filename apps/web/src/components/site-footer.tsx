@@ -7,8 +7,8 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-bg-raised">
       <div className="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 md:flex-row md:items-start md:justify-between">
         <div>
-          <Logo />
-          <p className="mt-2 max-w-xs text-sm text-ink-muted">{siteConfig.tagline}.</p>
+          <Logo slogan />
+          <p className="mt-3 max-w-xs text-sm text-ink-muted">{siteConfig.tagline}.</p>
           <p className="mt-3 text-xs uppercase tracking-wide text-ink-muted">
             {siteConfig.cities.join(" · ")}
           </p>

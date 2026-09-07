@@ -1,8 +1,9 @@
 export const siteConfig = {
-  name: "Targets Logistics",
+  name: "Target Logistics",
+  slogan: "On target. On time. Every time.",
   tagline: "Same-day courier for Kitchener, Waterloo and Cambridge",
   description:
-    "Targets Logistics runs same-day, rush, overnight and scheduled courier service across Kitchener, Waterloo and Cambridge, with every shipment scanned at pickup, at the depot, and at delivery.",
+    "Target Logistics runs same-day, rush, overnight and scheduled courier service across Kitchener, Waterloo and Cambridge, with every shipment scanned at pickup, at the depot, and at delivery.",
   cities: ["Kitchener", "Waterloo", "Cambridge"] as const,
 };
 
