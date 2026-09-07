@@ -46,6 +46,28 @@ enum RequestStatus {
   CLOSED
 }
 
+enum PackageType {
+  ENVELOPE
+  BOX
+  PALLET
+  OTHER
+}
+
+enum VehicleType {
+  CAR
+  MINI_VAN
+  CARGO_VAN
+  OTHER
+}
+
+enum ServiceLevel {
+  SAME_DAY
+  NEXT_DAY
+  FOUR_HOURS
+  HOT_RUSH
+  CRITICAL
+}
+
 // A client company. Created either by a public signup request once staff
 // approves it, or directly by staff — see User.status for the signup flow.
 model Account {
@@ -57,6 +79,7 @@ model Account {
 
   users            User[]
   shipmentRequests ShipmentRequest[]
+  orders           Order[]
 
   @@map("account")
 }
@@ -83,6 +106,7 @@ model User {
   sessions                Session[]
   passwordResetTokens     PasswordResetToken[]
   shipmentRequestsCreated ShipmentRequest[]    @relation("ShipmentRequestCreatedBy")
+  ordersCreated           Order[]              @relation("OrderCreatedBy")
   auditLogs               AuditLog[]
 
   @@index([accountId])
@@ -152,6 +176,53 @@ model ShipmentRequest {
   @@index([status])
   @@index([createdAt])
   @@map("shipment_request")
+}
+
+// A delivery order submitted through the public site (no account) or by a
+// logged-in client (accountId set). Priced from the Target Logistic rate card
+// via packages/shared; estimatedPriceCents is the stored estimate at submit.
+model Order {
+  id        String @id @default(uuid())
+  reference String @unique
+
+  // Null for public (not-logged-in) submissions; set for client submissions.
+  accountId       String? @map("account_id")
+  createdByUserId String? @map("created_by_user_id")
+
+  pickupContactName String? @map("pickup_contact_name")
+  pickupCompany     String? @map("pickup_company")
+  pickupPhone       String? @map("pickup_phone")
+  pickupAddress     String  @map("pickup_address")
+
+  deliveryContactName String? @map("delivery_contact_name")
+  deliveryCompany     String? @map("delivery_company")
+  deliveryPhone       String? @map("delivery_phone")
+  deliveryAddress     String  @map("delivery_address")
+
+  packageType PackageType? @map("package_type")
+  pieces      Int?
+  weightKg    Float?       @map("weight_kg")
+  dimensions  String?
+  contents    String?
+  vehicleType VehicleType? @map("vehicle_type")
+
+  serviceLevel        ServiceLevel @map("service_level")
+  pickupDate          String?      @map("pickup_date")
+  pickupTime          String?      @map("pickup_time")
+  specialInstructions String?      @map("special_instructions")
+
+  estimatedPriceCents Int           @map("estimated_price_cents")
+  status              RequestStatus @default(NEW)
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  account   Account? @relation(fields: [accountId], references: [id])
+  createdBy User?    @relation("OrderCreatedBy", fields: [createdByUserId], references: [id])
+
+  @@index([accountId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+  @@map("order")
 }
 
 // Staff mutations only (client actions on their own data aren't logged here

@@ -68,8 +68,8 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-2 md:flex">
           <ClientLoginLink className={buttonClasses("outline", "sm")} />
-          <Link href="/contact" prefetch={false} className={buttonClasses("primary", "sm")}>
-            Book a pickup
+          <Link href="/order" prefetch={false} className={buttonClasses("primary", "sm")}>
+            Book a delivery
           </Link>
         </div>
 
@@ -118,12 +118,12 @@ export function SiteHeader() {
                   onClick={() => setOpen(false)}
                 />
                 <Link
-                  href="/contact"
+                  href="/order"
                   prefetch={false}
                   onClick={() => setOpen(false)}
                   className={buttonClasses("primary", "md", "w-full")}
                 >
-                  Book a pickup
+                  Book a delivery
                 </Link>
               </div>
             </DialogPrimitive.Content>

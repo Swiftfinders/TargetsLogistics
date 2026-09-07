@@ -19,6 +19,7 @@ describe("POST /contact", () => {
       payload: {
         name: "Jordan Reyes",
         email: "jordan@example.com",
+        loadSize: "SMALL",
         message: "Need a same-day pickup quote for a Kitchener to Cambridge run.",
       },
     });

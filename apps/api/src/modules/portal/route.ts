@@ -1,7 +1,14 @@
 import type { FastifyInstance } from "fastify";
-import { createShipmentRequestInputSchema, LOAD_SIZE_DETAILS, type LoadSize } from "@targets/shared";
+import {
+  createShipmentRequestInputSchema,
+  createOrderInputSchema,
+  LOAD_SIZE_DETAILS,
+  type LoadSize,
+  type OrderResponse,
+} from "@targets/shared";
 import { prisma } from "../../lib/db.js";
 import { sendShipmentRequestNotification } from "../../lib/email.js";
+import { createOrder } from "../order/service.js";
 import { requireClient } from "../../lib/auth-middleware.js";
 
 const DEFAULT_LIMIT = 20;
@@ -72,6 +79,57 @@ export async function portalRoutes(app: FastifyInstance) {
     }).catch(() => {});
 
     return reply.code(201).send(created);
+  });
+
+  app.get("/portal/orders", { preHandler: requireClient }, async (request, reply) => {
+    const accountId = request.authUser?.accountId;
+    if (!accountId) return reply.code(403).send({ error: "no_account" });
+
+    const query = request.query as { cursor?: string; limit?: string };
+    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+
+    const items = await prisma.order.findMany({
+      where: { accountId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = items.length > limit;
+    const page = hasMore ? items.slice(0, limit) : items;
+
+    return reply.send({
+      items: page,
+      nextCursor: hasMore ? page[page.length - 1]?.id : null,
+    });
+  });
+
+  app.post("/portal/orders", { preHandler: requireClient }, async (request, reply) => {
+    const accountId = request.authUser?.accountId;
+    if (!accountId) return reply.code(403).send({ error: "no_account" });
+
+    const parsed = createOrderInputSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.code(400).send({ error: "invalid_input", issues: parsed.error.flatten().fieldErrors });
+    }
+
+    const account = await prisma.account.findUnique({ where: { id: accountId }, select: { name: true } });
+    const order = await createOrder({
+      input: parsed.data,
+      accountId,
+      createdByUserId: request.authUser!.id,
+      submittedByLabel: account?.name ?? "Client",
+      ip: request.ip,
+    });
+
+    const body: OrderResponse = {
+      id: order.id,
+      reference: order.reference,
+      estimatedPriceCents: order.estimatedPriceCents,
+      createdAt: order.createdAt.toISOString(),
+    };
+
+    return reply.code(201).send(body);
   });
 
   // Scoped by account_id at the repository layer (the where clause above), so

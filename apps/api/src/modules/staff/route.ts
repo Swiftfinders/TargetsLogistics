@@ -1,5 +1,11 @@
 import type { FastifyInstance } from "fastify";
-import { createClientInputSchema, requestStatusSchema, updateShipmentRequestStatusInputSchema } from "@targets/shared";
+import {
+  createClientInputSchema,
+  requestStatusSchema,
+  updateShipmentRequestStatusInputSchema,
+  orderStatusSchema,
+  updateOrderStatusInputSchema,
+} from "@targets/shared";
 import { prisma } from "../../lib/db.js";
 import { requireStaff } from "../../lib/auth-middleware.js";
 import { writeAuditLog } from "../../lib/audit.js";
@@ -57,6 +63,50 @@ export async function staffRoutes(app: FastifyInstance) {
         actorId: request.authUser!.id,
         action: "shipment_request.status_updated",
         entityType: "shipment_request",
+        entityId: id,
+        before: { status: existing.status },
+        after: { status: parsed.data.status },
+        ip: request.ip,
+      });
+      return result;
+    });
+
+    return reply.send(updated);
+  });
+
+  app.get("/staff/orders", { preHandler: requireStaff }, async (request, reply) => {
+    const query = request.query as { cursor?: string; limit?: string; status?: string };
+    const limit = Math.min(Number(query.limit) || DEFAULT_LIMIT, MAX_LIMIT);
+    const statusFilter = orderStatusSchema.safeParse(query.status);
+
+    const items = await prisma.order.findMany({
+      ...(statusFilter.success ? { where: { status: statusFilter.data } } : {}),
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      take: limit + 1,
+      include: { account: { select: { name: true } } },
+      ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+    });
+
+    const hasMore = items.length > limit;
+    const page = hasMore ? items.slice(0, limit) : items;
+
+    return reply.send({ items: page, nextCursor: hasMore ? page[page.length - 1]?.id : null });
+  });
+
+  app.patch("/staff/orders/:id/status", { preHandler: requireStaff }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const parsed = updateOrderStatusInputSchema.safeParse(request.body);
+    if (!parsed.success) return reply.code(400).send({ error: "invalid_input" });
+
+    const existing = await prisma.order.findUnique({ where: { id } });
+    if (!existing) return reply.code(404).send({ error: "not_found" });
+
+    const updated = await prisma.$transaction(async (tx) => {
+      const result = await tx.order.update({ where: { id }, data: { status: parsed.data.status } });
+      await writeAuditLog({
+        actorId: request.authUser!.id,
+        action: "order.status_updated",
+        entityType: "order",
         entityId: id,
         before: { status: existing.status },
         after: { status: parsed.data.status },
@@ -178,31 +228,28 @@ export async function staffRoutes(app: FastifyInstance) {
     const [
       totalClients,
       pendingSignups,
-      newRequests,
-      totalRequests,
-      acknowledgedRequests,
-      closedRequests,
-      totalContacts,
+      newOrders,
+      totalOrders,
+      acknowledgedOrders,
+      closedOrders,
       totalClientUsers,
     ] = await Promise.all([
       prisma.account.count(),
       prisma.user.count({ where: { userType: "CLIENT", status: "PENDING" } }),
-      prisma.shipmentRequest.count({ where: { status: "NEW" } }),
-      prisma.shipmentRequest.count(),
-      prisma.shipmentRequest.count({ where: { status: "ACKNOWLEDGED" } }),
-      prisma.shipmentRequest.count({ where: { status: "CLOSED" } }),
-      prisma.contactSubmission.count(),
+      prisma.order.count({ where: { status: "NEW" } }),
+      prisma.order.count(),
+      prisma.order.count({ where: { status: "ACKNOWLEDGED" } }),
+      prisma.order.count({ where: { status: "CLOSED" } }),
       prisma.user.count({ where: { userType: "CLIENT" } }),
     ]);
 
     return reply.send({
       totalClients,
       pendingSignups,
-      newRequests,
-      totalRequests,
-      acknowledgedRequests,
-      closedRequests,
-      totalContacts,
+      newOrders,
+      totalOrders,
+      acknowledgedOrders,
+      closedOrders,
       totalClientUsers,
     });
   });
@@ -219,7 +266,7 @@ export async function staffRoutes(app: FastifyInstance) {
           where: { userType: "CLIENT" },
           select: { id: true, name: true, email: true, status: true },
         },
-        _count: { select: { shipmentRequests: true } },
+        _count: { select: { orders: true } },
       },
       ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
     });

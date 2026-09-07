@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { siteConfig } from "@/lib/site";
-import { ContactForm } from "./contact-form";
+import { OrderForm } from "@/components/order-form";
 
 export const metadata: Metadata = {
-  title: "Contact",
-  description: `Book a pickup or ask a question. ${siteConfig.name} serves ${siteConfig.cities.join(", ")}.`,
+  title: "Book a delivery",
+  description: `Book a pickup and get an instant estimate. ${siteConfig.name} serves ${siteConfig.cities.join(", ")}.`,
 };
 
 export default function ContactPage() {
@@ -17,12 +17,12 @@ export default function ContactPage() {
         Tell us what needs to move
       </h1>
       <p className="mt-4 text-base leading-relaxed text-ink-muted">
-        Send us the details and we&apos;ll follow up with a quote and a pickup time.
+        Fill in the details for an instant estimate and we&apos;ll follow up to confirm your pickup.
         We cover Kitchener, Waterloo and Cambridge.
       </p>
 
       <div className="mt-10">
-        <ContactForm />
+        <OrderForm mode="public" />
       </div>
     </div>
   );

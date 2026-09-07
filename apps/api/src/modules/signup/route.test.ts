@@ -48,7 +48,7 @@ describe("public signup", () => {
     const response = await app.inject({
       method: "POST",
       url: "/signup",
-      payload: { name: "Jamie Smith", email, company: "Signup Test Co" },
+      payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD },
     });
     expect(response.statusCode).toBe(201);
 
@@ -70,7 +70,7 @@ describe("public signup", () => {
     const first = await app.inject({
       method: "POST",
       url: "/signup",
-      payload: { name: "Jamie Smith", email, company: "Signup Test Co" },
+      payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD },
     });
     expect(first.statusCode).toBe(201);
     const user = await prisma.user.findUnique({ where: { email } });
@@ -82,7 +82,7 @@ describe("public signup", () => {
     const second = await app.inject({
       method: "POST",
       url: "/signup",
-      payload: { name: "Jamie Smith", email, company: "Signup Test Co" },
+      payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD },
     });
     expect(second.statusCode).toBe(409);
 
@@ -93,17 +93,19 @@ describe("public signup", () => {
     const app = await buildApp();
     const email = `signup-${crypto.randomUUID()}@example.com`;
 
-    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co" } });
+    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD } });
     const user = await prisma.user.findUnique({ where: { email } });
     if (user) {
       cleanupUserIds.push(user.id);
       if (user.accountId) cleanupAccountIds.push(user.accountId);
     }
 
+    // The chosen password is correct, but a PENDING user still can't log in
+    // until staff approves the account.
     const loginResponse = await app.inject({
       method: "POST",
       url: "/auth/client/login",
-      payload: { email, password: "pending-signup-must-be-approved-and-set-password" },
+      payload: { email, password: PASSWORD },
     });
     expect(loginResponse.statusCode).toBe(401);
 
@@ -118,7 +120,7 @@ describe("staff signup review", () => {
     const staffCookie = await loginAsStaff(app, staff.email);
     const email = `signup-${crypto.randomUUID()}@example.com`;
 
-    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co" } });
+    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD } });
     const pendingUser = await prisma.user.findUniqueOrThrow({ where: { email } });
     cleanupUserIds.push(pendingUser.id);
     if (pendingUser.accountId) cleanupAccountIds.push(pendingUser.accountId);
@@ -139,10 +141,7 @@ describe("staff signup review", () => {
     expect(approveResponse.statusCode).toBe(200);
 
     const updated = await prisma.user.findUniqueOrThrow({ where: { id: pendingUser.id } });
-    expect(updated.status).toBe("INVITED");
-
-    const token = await prisma.passwordResetToken.findFirst({ where: { userId: pendingUser.id } });
-    expect(token).not.toBeNull();
+    expect(updated.status).toBe("ACTIVE");
 
     await app.close();
   });
@@ -153,7 +152,7 @@ describe("staff signup review", () => {
     const staffCookie = await loginAsStaff(app, staff.email);
     const email = `signup-${crypto.randomUUID()}@example.com`;
 
-    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co" } });
+    await app.inject({ method: "POST", url: "/signup", payload: { name: "Jamie Smith", email, company: "Signup Test Co", password: PASSWORD } });
     const pendingUser = await prisma.user.findUniqueOrThrow({ where: { email } });
     cleanupUserIds.push(pendingUser.id);
     if (pendingUser.accountId) cleanupAccountIds.push(pendingUser.accountId);

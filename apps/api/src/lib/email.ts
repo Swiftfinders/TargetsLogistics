@@ -1,4 +1,12 @@
 import { Resend } from "resend";
+import {
+  PACKAGE_TYPE_DETAILS,
+  SERVICE_LEVEL_DETAILS,
+  VEHICLE_DETAILS,
+  type PackageType,
+  type ServiceLevel,
+  type VehicleType,
+} from "@targets/shared";
 import { env } from "./env.js";
 import { logger } from "./logger.js";
 
@@ -110,6 +118,82 @@ export async function sendShipmentRequestNotification(request: {
     });
   } catch (error) {
     logger.error({ err: error }, "failed to send shipment request notification email");
+  }
+}
+
+export interface OrderNotification {
+  reference: string;
+  pickupContactName?: string | null;
+  pickupCompany?: string | null;
+  pickupPhone?: string | null;
+  pickupAddress: string;
+  deliveryContactName?: string | null;
+  deliveryCompany?: string | null;
+  deliveryPhone?: string | null;
+  deliveryAddress: string;
+  packageType?: PackageType | null;
+  pieces?: number | null;
+  weightKg?: number | null;
+  dimensions?: string | null;
+  contents?: string | null;
+  vehicleType?: VehicleType | null;
+  serviceLevel: ServiceLevel;
+  pickupDate?: string | null;
+  pickupTime?: string | null;
+  specialInstructions?: string | null;
+  estimatedPriceCents: number;
+  submittedBy: string; // account/company name, or "Public website"
+}
+
+export async function sendOrderNotification(order: OrderNotification): Promise<void> {
+  if (!resend) {
+    logger.warn("RESEND_API_KEY not set — skipping order notification email");
+    return;
+  }
+
+  const price = `$${(order.estimatedPriceCents / 100).toFixed(2)}`;
+  const schedule = [order.pickupDate, order.pickupTime].filter(Boolean).join(" ");
+
+  const lines = [
+    `Order reference: ${order.reference}`,
+    `Submitted by: ${order.submittedBy}`,
+    `Estimated price: ${price}`,
+    "",
+    "PICKUP",
+    order.pickupContactName ? `  Contact: ${order.pickupContactName}` : null,
+    order.pickupCompany ? `  Company: ${order.pickupCompany}` : null,
+    order.pickupPhone ? `  Phone: ${order.pickupPhone}` : null,
+    `  Address: ${order.pickupAddress}`,
+    "",
+    "DELIVERY",
+    order.deliveryContactName ? `  Contact: ${order.deliveryContactName}` : null,
+    order.deliveryCompany ? `  Company: ${order.deliveryCompany}` : null,
+    order.deliveryPhone ? `  Phone: ${order.deliveryPhone}` : null,
+    `  Address: ${order.deliveryAddress}`,
+    "",
+    "SHIPMENT",
+    order.packageType ? `  Package type: ${PACKAGE_TYPE_DETAILS[order.packageType].label}` : null,
+    order.pieces != null ? `  Packages: ${order.pieces}` : null,
+    order.weightKg != null ? `  Weight: ${order.weightKg} kg` : null,
+    order.dimensions ? `  Dimensions: ${order.dimensions}` : null,
+    order.contents ? `  Contents: ${order.contents}` : null,
+    order.vehicleType ? `  Vehicle: ${VEHICLE_DETAILS[order.vehicleType].label}` : null,
+    "",
+    "SERVICE",
+    `  Service level: ${SERVICE_LEVEL_DETAILS[order.serviceLevel].label}`,
+    schedule ? `  Requested pickup: ${schedule}` : null,
+    order.specialInstructions ? `  Special instructions: ${order.specialInstructions}` : null,
+  ].filter((line): line is string => line !== null);
+
+  try {
+    await resend.emails.send({
+      from: FROM_ADDRESS,
+      to: CONTACT_NOTIFICATION_EMAIL,
+      subject: `New order ${order.reference} — ${order.submittedBy}`,
+      text: lines.join("\n"),
+    });
+  } catch (error) {
+    logger.error({ err: error }, "failed to send order notification email");
   }
 }
 

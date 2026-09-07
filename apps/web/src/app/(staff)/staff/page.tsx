@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { SERVICE_LEVEL_DETAILS, VEHICLE_DETAILS, type ServiceLevel, type VehicleType } from "@targets/shared";
 import { AuthGuard } from "@/components/auth-guard";
 import { PortalHeader } from "@/components/portal/portal-header";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } fro
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { publicEnv } from "@/lib/public-env";
-import { LOAD_SIZE_LABELS, REQUEST_STATUS_LABELS, SERVICE_TIER_LABELS, formatNeededBy } from "@/lib/shipment-request-format";
+import { REQUEST_STATUS_LABELS } from "@/lib/shipment-request-format";
 import type { SessionUser } from "@/lib/use-session";
 
 /* ------------------------------------------------------------------ */
@@ -21,27 +22,25 @@ import type { SessionUser } from "@/lib/use-session";
 interface Analytics {
   totalClients: number;
   pendingSignups: number;
-  newRequests: number;
-  totalRequests: number;
-  acknowledgedRequests: number;
-  closedRequests: number;
-  totalContacts: number;
+  newOrders: number;
+  totalOrders: number;
+  acknowledgedOrders: number;
+  closedOrders: number;
   totalClientUsers: number;
 }
 
-interface ShipmentRequestRow {
+interface OrderRow {
   id: string;
+  reference: string;
+  pickupCompany: string | null;
   pickupAddress: string;
-  dropoffAddress: string;
-  description: string;
-  neededBy: string;
-  serviceTier: string;
-  loadSize: string;
+  deliveryAddress: string;
+  vehicleType: string | null;
+  serviceLevel: string;
+  estimatedPriceCents: number;
   status: string;
-  pieces: number | null;
-  weightKg: number | null;
   createdAt: string;
-  account: { name: string };
+  account: { name: string } | null;
 }
 
 interface SignupRow {
@@ -58,18 +57,7 @@ interface ClientAccountRow {
   status: string;
   createdAt: string;
   users: { id: string; name: string; email: string; status: string }[];
-  _count: { shipmentRequests: number };
-}
-
-interface ContactRow {
-  id: string;
-  name: string;
-  email: string;
-  phone: string | null;
-  company: string | null;
-  loadSize: string;
-  message: string;
-  createdAt: string;
+  _count: { orders: number };
 }
 
 /* ------------------------------------------------------------------ */
@@ -78,6 +66,10 @@ interface ContactRow {
 
 const API = publicEnv.NEXT_PUBLIC_API_URL;
 const SERVICE_CITIES = ["Kitchener", "Waterloo", "Cambridge"];
+
+const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const serviceLabel = (level: string) => SERVICE_LEVEL_DETAILS[level as ServiceLevel]?.label ?? level;
+const vehicleLabel = (v: string | null) => (v ? (VEHICLE_DETAILS[v as VehicleType]?.label ?? v) : "—");
 
 function statusTone(status: string): "neutral" | "confirm" | "accent" {
   if (status === "CLOSED") return "confirm";
@@ -129,30 +121,30 @@ function StatsOverview({ analytics }: { analytics: Analytics | null }) {
     <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
       <StatCard label="Client accounts" value={analytics.totalClients} />
       <StatCard label="Pending signups" value={analytics.pendingSignups} accent={analytics.pendingSignups > 0} />
-      <StatCard label="New requests" value={analytics.newRequests} accent={analytics.newRequests > 0} />
-      <StatCard label="Contact inquiries" value={analytics.totalContacts} />
+      <StatCard label="New orders" value={analytics.newOrders} accent={analytics.newOrders > 0} />
+      <StatCard label="Total orders" value={analytics.totalOrders} />
     </div>
   );
 }
 
-function RequestBreakdown({ analytics }: { analytics: Analytics | null }) {
-  if (!analytics || analytics.totalRequests === 0) return null;
+function OrderBreakdown({ analytics }: { analytics: Analytics | null }) {
+  if (!analytics || analytics.totalOrders === 0) return null;
 
   return (
     <Card className="p-5">
-      <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Request breakdown</span>
+      <span className="text-xs font-semibold uppercase tracking-wide text-ink-muted">Order breakdown</span>
       <div className="mt-3 flex gap-6">
         <div className="flex items-center gap-2">
           <Badge tone="accent">New</Badge>
-          <span className="text-sm font-semibold text-ink">{analytics.newRequests}</span>
+          <span className="text-sm font-semibold text-ink">{analytics.newOrders}</span>
         </div>
         <div className="flex items-center gap-2">
           <Badge tone="neutral">Acknowledged</Badge>
-          <span className="text-sm font-semibold text-ink">{analytics.acknowledgedRequests}</span>
+          <span className="text-sm font-semibold text-ink">{analytics.acknowledgedOrders}</span>
         </div>
         <div className="flex items-center gap-2">
           <Badge tone="confirm">Closed</Badge>
-          <span className="text-sm font-semibold text-ink">{analytics.closedRequests}</span>
+          <span className="text-sm font-semibold text-ink">{analytics.closedOrders}</span>
         </div>
       </div>
     </Card>
@@ -160,16 +152,16 @@ function RequestBreakdown({ analytics }: { analytics: Analytics | null }) {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Requests Tab                                                      */
+/*  Orders Tab                                                        */
 /* ------------------------------------------------------------------ */
 
-function RequestsTab() {
+function OrdersTab() {
   const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
-  const [items, setItems] = useState<ShipmentRequestRow[]>([]);
+  const [items, setItems] = useState<OrderRow[]>([]);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${API}/staff/requests`, { credentials: "include" })
+    fetch(`${API}/staff/orders`, { credentials: "include" })
       .then((res) => (res.ok ? res.json() : Promise.reject(new Error("failed"))))
       .then((body) => { setItems(body.items); setState("loaded"); })
       .catch(() => setState("error"));
@@ -179,7 +171,7 @@ function RequestsTab() {
     setUpdatingId(id);
     const previous = items;
     setItems((cur) => cur.map((r) => (r.id === id ? { ...r, status } : r)));
-    const res = await fetch(`${API}/staff/requests/${id}/status`, {
+    const res = await fetch(`${API}/staff/orders/${id}/status`, {
       method: "PATCH",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
@@ -189,66 +181,68 @@ function RequestsTab() {
     setUpdatingId(null);
   }
 
-  if (state === "loading") return <p className="text-sm text-ink-muted">Loading requests…</p>;
+  if (state === "loading") return <p className="text-sm text-ink-muted">Loading orders…</p>;
   if (state === "error") {
     return (
       <p className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm text-accent">
-        Couldn&apos;t load requests. Please refresh the page.
+        Couldn&apos;t load orders. Please refresh the page.
       </p>
     );
   }
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-line p-10 text-center">
-        <p className="text-sm text-ink-muted">No client requests yet.</p>
+        <p className="text-sm text-ink-muted">No orders yet.</p>
       </div>
     );
   }
 
   return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>Account</TableHeaderCell>
-          <TableHeaderCell>Pickup</TableHeaderCell>
-          <TableHeaderCell>Dropoff</TableHeaderCell>
-          <TableHeaderCell>Service</TableHeaderCell>
-          <TableHeaderCell>Load size</TableHeaderCell>
-          <TableHeaderCell>Needed by</TableHeaderCell>
-          <TableHeaderCell>Status</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.account.name}</TableCell>
-            <TableCell>{item.pickupAddress}</TableCell>
-            <TableCell>{item.dropoffAddress}</TableCell>
-            <TableCell>{SERVICE_TIER_LABELS[item.serviceTier] ?? item.serviceTier}</TableCell>
-            <TableCell>{LOAD_SIZE_LABELS[item.loadSize] ?? item.loadSize}</TableCell>
-            <TableCell>{formatNeededBy(item.neededBy)}</TableCell>
-            <TableCell>
-              <div className="flex items-center gap-2">
-                <Badge tone={statusTone(item.status)}>
-                  {REQUEST_STATUS_LABELS[item.status] ?? item.status}
-                </Badge>
-                <Select
-                  aria-label={`Update status for request to ${item.dropoffAddress}`}
-                  value={item.status}
-                  disabled={updatingId === item.id}
-                  onChange={(e) => updateStatus(item.id, e.target.value)}
-                  className="w-auto py-1 text-xs"
-                >
-                  <option value="NEW">New</option>
-                  <option value="ACKNOWLEDGED">Acknowledged</option>
-                  <option value="CLOSED">Closed</option>
-                </Select>
-              </div>
-            </TableCell>
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableHeaderCell>Reference</TableHeaderCell>
+            <TableHeaderCell>Customer</TableHeaderCell>
+            <TableHeaderCell>Pickup</TableHeaderCell>
+            <TableHeaderCell>Delivery</TableHeaderCell>
+            <TableHeaderCell>Vehicle</TableHeaderCell>
+            <TableHeaderCell>Service</TableHeaderCell>
+            <TableHeaderCell>Estimate</TableHeaderCell>
+            <TableHeaderCell>Status</TableHeaderCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
+        </TableHead>
+        <TableBody>
+          {items.map((item) => (
+            <TableRow key={item.id}>
+              <TableCell className="font-mono text-xs">{item.reference}</TableCell>
+              <TableCell className="font-medium">{item.account?.name ?? item.pickupCompany ?? "Public"}</TableCell>
+              <TableCell>{item.pickupAddress}</TableCell>
+              <TableCell>{item.deliveryAddress}</TableCell>
+              <TableCell>{vehicleLabel(item.vehicleType)}</TableCell>
+              <TableCell>{serviceLabel(item.serviceLevel)}</TableCell>
+              <TableCell>{formatPrice(item.estimatedPriceCents)}</TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <Badge tone={statusTone(item.status)}>{REQUEST_STATUS_LABELS[item.status] ?? item.status}</Badge>
+                  <Select
+                    aria-label={`Update status for order ${item.reference}`}
+                    value={item.status}
+                    disabled={updatingId === item.id}
+                    onChange={(e) => updateStatus(item.id, e.target.value)}
+                    className="w-auto py-1 text-xs"
+                  >
+                    <option value="NEW">New</option>
+                    <option value="ACKNOWLEDGED">Acknowledged</option>
+                    <option value="CLOSED">Closed</option>
+                  </Select>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
 
@@ -291,7 +285,7 @@ function ClientsTab() {
           <TableHeaderCell>Contact</TableHeaderCell>
           <TableHeaderCell>Email</TableHeaderCell>
           <TableHeaderCell>Status</TableHeaderCell>
-          <TableHeaderCell>Requests</TableHeaderCell>
+          <TableHeaderCell>Orders</TableHeaderCell>
           <TableHeaderCell>Created</TableHeaderCell>
         </TableRow>
       </TableHead>
@@ -308,7 +302,7 @@ function ClientsTab() {
                   {primary ? userStatusLabel(primary.status) : "—"}
                 </Badge>
               </TableCell>
-              <TableCell>{account._count.shipmentRequests}</TableCell>
+              <TableCell>{account._count.orders}</TableCell>
               <TableCell>{new Date(account.createdAt).toLocaleDateString()}</TableCell>
             </TableRow>
           );
@@ -348,7 +342,7 @@ function SignupsTab({ onCountChange }: { onCountChange: (count: number) => void 
       onCountChange(next.length);
       publish({
         title: action === "approve" ? "Signup approved" : "Signup rejected",
-        ...(action === "approve" ? { description: "An invite email with a set-password link was sent." } : {}),
+        ...(action === "approve" ? { description: "The client can now sign in with the password they chose." } : {}),
       });
     } else {
       publish({ title: "Something went wrong", description: "Please try again." });
@@ -400,67 +394,6 @@ function SignupsTab({ onCountChange }: { onCountChange: (count: number) => void 
                 </Button>
               </div>
             </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Contacts Tab                                                      */
-/* ------------------------------------------------------------------ */
-
-function ContactsTab() {
-  const [state, setState] = useState<"loading" | "loaded" | "error">("loading");
-  const [items, setItems] = useState<ContactRow[]>([]);
-
-  useEffect(() => {
-    fetch(`${API}/staff/contacts`, { credentials: "include" })
-      .then((res) => (res.ok ? res.json() : Promise.reject(new Error("failed"))))
-      .then((body) => { setItems(body.items); setState("loaded"); })
-      .catch(() => setState("error"));
-  }, []);
-
-  if (state === "loading") return <p className="text-sm text-ink-muted">Loading inquiries…</p>;
-  if (state === "error") {
-    return (
-      <p className="rounded-xl border border-accent/40 bg-accent/10 p-4 text-sm text-accent">
-        Couldn&apos;t load contact submissions. Please refresh the page.
-      </p>
-    );
-  }
-  if (items.length === 0) {
-    return (
-      <div className="rounded-2xl border border-dashed border-line p-10 text-center">
-        <p className="text-sm text-ink-muted">No contact form submissions yet.</p>
-      </div>
-    );
-  }
-
-  return (
-    <Table>
-      <TableHead>
-        <TableRow>
-          <TableHeaderCell>Name</TableHeaderCell>
-          <TableHeaderCell>Email</TableHeaderCell>
-          <TableHeaderCell>Company</TableHeaderCell>
-          <TableHeaderCell>Load size</TableHeaderCell>
-          <TableHeaderCell>Message</TableHeaderCell>
-          <TableHeaderCell>Received</TableHeaderCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.id}>
-            <TableCell className="font-medium">{item.name}</TableCell>
-            <TableCell>{item.email}</TableCell>
-            <TableCell>{item.company ?? "—"}</TableCell>
-            <TableCell>{LOAD_SIZE_LABELS[item.loadSize] ?? item.loadSize}</TableCell>
-            <TableCell>
-              <span className="line-clamp-2 max-w-xs text-sm">{item.message}</span>
-            </TableCell>
-            <TableCell>{new Date(item.createdAt).toLocaleDateString()}</TableCell>
           </TableRow>
         ))}
       </TableBody>
@@ -530,15 +463,15 @@ function DashboardContent({ user }: { user: SessionUser }) {
           <StatsOverview analytics={analytics} />
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <RequestBreakdown analytics={analytics} />
+            <OrderBreakdown analytics={analytics} />
             <ServiceArea />
           </div>
         </div>
 
         <div className="mt-10">
-          <Tabs defaultValue="requests">
+          <Tabs defaultValue="orders">
             <TabsList className="flex-wrap">
-              <TabsTrigger value="requests">Requests</TabsTrigger>
+              <TabsTrigger value="orders">Orders</TabsTrigger>
               <TabsTrigger value="clients">Clients</TabsTrigger>
               <TabsTrigger value="signups">
                 Signups{signupCount > 0 && (
@@ -547,20 +480,16 @@ function DashboardContent({ user }: { user: SessionUser }) {
                   </span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="contacts">Inquiries</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="requests">
-              <RequestsTab />
+            <TabsContent value="orders">
+              <OrdersTab />
             </TabsContent>
             <TabsContent value="clients">
               <ClientsTab />
             </TabsContent>
             <TabsContent value="signups">
               <SignupsTab onCountChange={handleSignupCountChange} />
-            </TabsContent>
-            <TabsContent value="contacts">
-              <ContactsTab />
             </TabsContent>
           </Tabs>
         </div>

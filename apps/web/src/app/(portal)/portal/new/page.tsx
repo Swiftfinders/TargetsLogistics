@@ -3,7 +3,7 @@
 import { AuthGuard } from "@/components/auth-guard";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { PortalHeader } from "@/components/portal/portal-header";
-import { NewRequestForm } from "./new-request-form";
+import { OrderForm } from "@/components/order-form";
 
 export default function NewRequestPage() {
   return (
@@ -12,11 +12,11 @@ export default function NewRequestPage() {
         <div className="min-h-screen bg-bg">
           <PortalHeader user={user} homeHref="/portal" />
           <div className="mx-auto max-w-2xl px-5 py-10">
-            <Breadcrumb items={[{ label: "Requests", href: "/portal" }, { label: "New request" }]} />
-            <h1 className="mt-4 text-2xl font-extrabold text-ink">New shipment request</h1>
-            <p className="mt-1 text-sm text-ink-muted">We&apos;ll follow up with a quote and pickup time.</p>
+            <Breadcrumb items={[{ label: "Orders", href: "/portal" }, { label: "New order" }]} />
+            <h1 className="mt-4 text-2xl font-extrabold text-ink">New delivery order</h1>
+            <p className="mt-1 text-sm text-ink-muted">We&apos;ll follow up to confirm timing and the final price.</p>
             <div className="mt-8">
-              <NewRequestForm />
+              <OrderForm mode="client" />
             </div>
           </div>
         </div>

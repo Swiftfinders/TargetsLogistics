@@ -7,6 +7,7 @@ import { env } from "./lib/env.js";
 import { logger } from "./lib/logger.js";
 import { healthRoutes } from "./modules/health/route.js";
 import { contactRoutes } from "./modules/contact/route.js";
+import { orderRoutes } from "./modules/order/route.js";
 import { authRoutes } from "./modules/auth/route.js";
 import { portalRoutes } from "./modules/portal/route.js";
 import { staffRoutes } from "./modules/staff/route.js";
@@ -35,6 +36,7 @@ export async function buildApp() {
 
   await app.register(healthRoutes);
   await app.register(contactRoutes);
+  await app.register(orderRoutes);
   await app.register(authRoutes);
   await app.register(portalRoutes);
   await app.register(staffRoutes);

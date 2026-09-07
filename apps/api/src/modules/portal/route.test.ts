@@ -60,6 +60,7 @@ describe("client portal shipment requests", () => {
         description: "A test parcel",
         neededBy: new Date(Date.now() + 3600_000).toISOString(),
         serviceTier: "SAME_DAY",
+        loadSize: "SMALL",
       },
     });
     expect(createResponse.statusCode).toBe(201);
@@ -93,6 +94,7 @@ describe("client portal shipment requests", () => {
         description: "Belongs to account A only",
         neededBy: new Date(Date.now() + 3600_000).toISOString(),
         serviceTier: "RUSH",
+        loadSize: "MEDIUM",
       },
     });
     const requestId = createResponse.json().id;
@@ -138,6 +140,7 @@ describe("staff visibility across accounts", () => {
         description: "Staff should see this",
         neededBy: new Date(Date.now() + 3600_000).toISOString(),
         serviceTier: "OVERNIGHT",
+        loadSize: "LARGE",
       },
     });
 
