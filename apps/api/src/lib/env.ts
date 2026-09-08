@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const defaultWebUrl =
-  process.env.NODE_ENV === "production" ? "https://targets-logistics-web.vercel.app" : "http://localhost:3000";
+  process.env.NODE_ENV === "production" ? "https://www.target-logistics.ca" : "http://localhost:3000";
 
 // WEB_URL only builds links in emails — a malformed value must never crash the
 // whole API (a bare domain typed into Railway once took the server down, which

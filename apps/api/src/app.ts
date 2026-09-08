@@ -21,7 +21,17 @@ export async function buildApp() {
     const webOrigin = new URL(env.WEB_URL).origin;
     if (!corsOrigins.includes(webOrigin)) corsOrigins.push(webOrigin);
   } catch { /* WEB_URL not a valid URL — skip */ }
-  if (!corsOrigins.includes("http://localhost:3000")) corsOrigins.push("http://localhost:3000");
+  // Always-allowed origins: local dev, the apex domain, and the Vercel alias
+  // (kept so the site still works during DNS cutover). Browser calls go through
+  // the same-origin proxy so this mainly covers any direct API access.
+  for (const origin of [
+    "http://localhost:3000",
+    "https://target-logistics.ca",
+    "https://www.target-logistics.ca",
+    "https://targets-logistics-web.vercel.app",
+  ]) {
+    if (!corsOrigins.includes(origin)) corsOrigins.push(origin);
+  }
 
   await app.register(cors, {
     origin: corsOrigins,
