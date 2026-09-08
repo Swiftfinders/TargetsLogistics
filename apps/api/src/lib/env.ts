@@ -1,5 +1,23 @@
 import { z } from "zod";
 
+const defaultWebUrl =
+  process.env.NODE_ENV === "production" ? "https://targets-logistics-web.vercel.app" : "http://localhost:3000";
+
+// WEB_URL only builds links in emails — a malformed value must never crash the
+// whole API (a bare domain typed into Railway once took the server down, which
+// broke login and the order form together). Tolerate a scheme-less domain by
+// prepending https://, and fall back to the default if it still won't parse.
+const webUrlSchema = z.preprocess((value) => {
+  if (typeof value !== "string" || !value.trim()) return defaultWebUrl;
+  const trimmed = value.trim();
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  try {
+    return new URL(withScheme).toString().replace(/\/$/, "");
+  } catch {
+    return defaultWebUrl;
+  }
+}, z.string().url());
+
 const envSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -20,11 +38,8 @@ const envSchema = z.object({
   // production until this is set to ".yourdomain.com".
   COOKIE_DOMAIN: z.string().optional(),
   // Base URL of apps/web, used to build links in emails (password reset, etc).
-  WEB_URL: z.string().url().default(
-    process.env.NODE_ENV === "production"
-      ? "https://targets-logistics-web.vercel.app"
-      : "http://localhost:3000"
-  ),
+  // Resilient — see webUrlSchema; a bad value falls back instead of crashing.
+  WEB_URL: webUrlSchema.default(defaultWebUrl),
 });
 
 export type Env = z.infer<typeof envSchema>;
