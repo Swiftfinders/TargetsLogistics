@@ -28,27 +28,27 @@
  * utility points at, never fight Tailwind's own cascade layer.
  */
 /*
- * Target Logistics brand palette — navy base, purple primary, gold accent, from
- * the logo. `primary` (purple) carries brand + CTAs + illustrations; `gold` is
- * the highlight; `accent` stays a warm tone pulled from the logo's ring and is
- * reserved for errors/alerts and attention states.
+ * Target Logistics brand palette — blue primary and orange highlight, from the
+ * logo's truck and clock. `primary` (blue) carries brand + CTAs + illustrations;
+ * `gold` is the logo's exact orange, for highlights; `accent` is a deeper shade of
+ * it with better contrast as text, for links, errors/alerts and attention states.
  */
 :root {
   --tl-bg: #ffffff;
-  --tl-bg-raised: #f5f4fc;
-  --tl-bg-sunken: #ecebf8;
-  --tl-ink: #191a3d;
-  --tl-ink-muted: #5c6088;
-  --tl-primary: #5b46d9;
+  --tl-bg-raised: #f4f6fc;
+  --tl-bg-sunken: #e9edf8;
+  --tl-ink: #141b3d;
+  --tl-ink-muted: #56608a;
+  --tl-primary: #2444b5;
   --tl-primary-ink: #ffffff;
-  --tl-accent: #ff6a3d;
+  --tl-accent: #e8600a;
   --tl-accent-ink: #2a0d00;
-  --tl-gold: #f5a623;
-  --tl-gold-ink: #241800;
+  --tl-gold: #ff7f11;
+  --tl-gold-ink: #2a1300;
   --tl-confirm: #12b28e;
   --tl-confirm-bg: #e2f8f3;
-  --tl-line: #e5e3f3;
-  --tl-focus: #5b46d9;
+  --tl-line: #e2e7f3;
+  --tl-focus: #2444b5;
   color-scheme: light;
 }
 
@@ -59,40 +59,40 @@
  * added later; it just doesn't kick in automatically.
  */
 :root[data-theme="dark"] {
-  --tl-bg: #0f1030;
-  --tl-bg-raised: #191a44;
-  --tl-bg-sunken: #13143a;
-  --tl-ink: #f1f1fb;
-  --tl-ink-muted: #a3a6cc;
-  --tl-primary: #8f7dff;
+  --tl-bg: #0c1330;
+  --tl-bg-raised: #141d45;
+  --tl-bg-sunken: #101839;
+  --tl-ink: #eef1fb;
+  --tl-ink-muted: #a0a9cc;
+  --tl-primary: #7b93ff;
   --tl-primary-ink: #0b0b22;
-  --tl-accent: #ff8a63;
+  --tl-accent: #ff8f3d;
   --tl-accent-ink: #2a0d00;
-  --tl-gold: #f7b83f;
-  --tl-gold-ink: #241800;
+  --tl-gold: #ffa04a;
+  --tl-gold-ink: #2a1300;
   --tl-confirm: #2fe0c0;
   --tl-confirm-bg: #0f2a26;
-  --tl-line: #2b2c50;
-  --tl-focus: #8f7dff;
+  --tl-line: #26305a;
+  --tl-focus: #7b93ff;
   color-scheme: dark;
 }
 
 :root[data-theme="light"] {
   --tl-bg: #ffffff;
-  --tl-bg-raised: #f5f4fc;
-  --tl-bg-sunken: #ecebf8;
-  --tl-ink: #191a3d;
-  --tl-ink-muted: #5c6088;
-  --tl-primary: #5b46d9;
+  --tl-bg-raised: #f4f6fc;
+  --tl-bg-sunken: #e9edf8;
+  --tl-ink: #141b3d;
+  --tl-ink-muted: #56608a;
+  --tl-primary: #2444b5;
   --tl-primary-ink: #ffffff;
-  --tl-accent: #ff6a3d;
+  --tl-accent: #e8600a;
   --tl-accent-ink: #2a0d00;
-  --tl-gold: #f5a623;
-  --tl-gold-ink: #241800;
+  --tl-gold: #ff7f11;
+  --tl-gold-ink: #2a1300;
   --tl-confirm: #12b28e;
   --tl-confirm-bg: #e2f8f3;
-  --tl-line: #e5e3f3;
-  --tl-focus: #5b46d9;
+  --tl-line: #e2e7f3;
+  --tl-focus: #2444b5;
   color-scheme: light;
 }
 

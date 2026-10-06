@@ -18,12 +18,12 @@ import { buttonClasses } from "@/components/ui/button";
 import { cn } from "@/lib/cn";
 import { publicEnv } from "@/lib/public-env";
 
-/* Brand tokens — navy ink, gold highlights, purple CTA, warm accent for the
+/* Brand tokens — navy ink, orange highlights, blue CTA, warm accent for the
    required markers — so the order form reads as the same brand as the site. */
 const NAVY = "var(--color-ink)";
 const GOLD = "var(--color-gold)";
 const ACCENT = "var(--color-accent)";
-const PURPLE = "var(--color-primary)";
+const BLUE = "var(--color-primary)";
 
 const formatPrice = (cents: number) => `$${(cents / 100).toFixed(2)}`;
 
@@ -470,7 +470,7 @@ export function OrderForm({ mode }: { mode: "public" | "client" }) {
         type="submit"
         disabled={status === "submitting"}
         className="w-full rounded-full px-6 py-4 text-sm font-bold uppercase tracking-wide text-white transition-colors hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-focus)"
-        style={{ backgroundColor: PURPLE }}
+        style={{ backgroundColor: BLUE }}
       >
         {status === "submitting" ? "Sending…" : "Send order to dispatch"}
       </button>

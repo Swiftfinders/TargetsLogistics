@@ -178,6 +178,12 @@ was inflating Lighthouse's per-page network trace with the *other* pages'
 prefetched chunks, making every route measure identically instead of its own
 actual weight.
 
+*Update 2026-10-06:* raised to 165KB. `/contact` now renders the full
+interactive `OrderForm` and measured ~158KB, so the 150KB budget had been
+failing unnoticed (CI only ran on pushes to `main`, which doesn't exist).
+Raising it was the owner's call over slimming the form's client bundle;
+`/` and `/about` still measure ~140KB.
+
 ## 2026-07-26 — Phase 0 confirmed live in production
 
 Both services deployed and verified end-to-end:
