@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { LogoMark } from "@/components/logo";
 import { siteConfig } from "@/lib/site";
 
 export const size = { width: 1200, height: 630 };
@@ -19,22 +20,7 @@ export default async function OpengraphImage() {
           fontFamily: "sans-serif",
         }}
       >
-        <div
-          style={{
-            width: 96,
-            height: 96,
-            borderRadius: "50%",
-            background: "#1c1b46",
-            border: "5px solid #f5a623",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
-        >
-          <div style={{ position: "absolute", width: 46, height: 13, borderRadius: 4, background: "#f5a623" }} />
-          <div style={{ position: "absolute", width: 13, height: 46, borderRadius: 4, background: "#6a54e6" }} />
-        </div>
+        <LogoMark gap="#ffffff" height={88} />
         <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, textTransform: "uppercase", color: "#5c6088", marginTop: 36 }}>
           {siteConfig.cities.join(" · ")}
         </div>
