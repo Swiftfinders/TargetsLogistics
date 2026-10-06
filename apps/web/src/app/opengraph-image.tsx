@@ -21,15 +21,15 @@ export default async function OpengraphImage() {
         }}
       >
         <LogoMark gap="#ffffff" height={88} />
-        <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, textTransform: "uppercase", color: "#5c6088", marginTop: 36 }}>
+        <div style={{ display: "flex", fontSize: 28, letterSpacing: 4, textTransform: "uppercase", color: "#56608a", marginTop: 36 }}>
           {siteConfig.cities.join(" · ")}
         </div>
-        <div style={{ display: "flex", fontSize: 68, fontWeight: 800, marginTop: 20, lineHeight: 1.1, maxWidth: 950, color: "#191a3d" }}>
+        <div style={{ display: "flex", fontSize: 68, fontWeight: 800, marginTop: 20, lineHeight: 1.1, maxWidth: 950, color: "#141b3d" }}>
           {siteConfig.tagline}
         </div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 16, marginTop: 28 }}>
-          <div style={{ display: "flex", fontSize: 32, color: "#5b46d9", fontWeight: 700 }}>{siteConfig.name}</div>
-          <div style={{ display: "flex", fontSize: 22, color: "#5c6088", fontWeight: 500 }}>{siteConfig.slogan}</div>
+          <div style={{ display: "flex", fontSize: 32, color: "#2444b5", fontWeight: 700 }}>{siteConfig.name}</div>
+          <div style={{ display: "flex", fontSize: 22, color: "#56608a", fontWeight: 500 }}>{siteConfig.slogan}</div>
         </div>
       </div>
     ),
